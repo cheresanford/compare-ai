@@ -26,8 +26,8 @@ Depois de subir, acesse:
 
 ## Desenvolvimento local (fora do Docker)
 - **Backend:** na pasta `backend/`, instale dependências (`npm install`) e rode `npm run start:dev`. Configure variáveis em um `.env` baseado no `.env.example`.
-- **Frontend Vue:** na pasta `frontend-vue/`, instale dependências e rode `npm run dev`. Defina `VITE_API_URL` (padrão `http://localhost:3000`).
-- **Frontend React:** na pasta `frontend-react/`, instale dependências e rode `npm run dev`. Defina `VITE_API_URL` (padrão `http://localhost:3000`).
+- **Frontend Vue:** na pasta `frontend-vue/`, instale dependências e rode `npm run dev`. Defina `VITE_API_URL` (padrão `http://localhost:3000`; em produção via Docker, o build já usa `http://tcc_api:3000`).
+- **Frontend React:** na pasta `frontend-react/`, instale dependências e rode `npm run dev`. Defina `VITE_API_URL` (padrão `http://localhost:3000`; em produção via Docker, o build já usa `http://tcc_api:3000`).
 
 ## Estrutura
 - `backend/`: API NestJS com TypeORM e MySQL, rotas `/health` e `/version`.

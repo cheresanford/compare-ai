@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   db:
     image: mysql:8.0
@@ -30,7 +28,10 @@ services:
       - "3000:3000"
 
   web-vue:
-    build: ./frontend-vue
+    build:
+      context: ./frontend-vue
+      args:
+        VITE_API_URL: http://tcc_api:3000
     container_name: tcc_web_vue
     depends_on:
       - api
@@ -39,7 +40,10 @@ services:
     profiles: ["vue"]
 
   web-react:
-    build: ./frontend-react
+    build:
+      context: ./frontend-react
+      args:
+        VITE_API_URL: http://tcc_api:3000
     container_name: tcc_web_react
     depends_on:
       - api
