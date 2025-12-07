@@ -26,6 +26,7 @@ services:
       DB_NAME: tcc
     ports:
       - "3000:3000"
+    profiles: ["vue", "react"]
 
   web-vue:
     build:
