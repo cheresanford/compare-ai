@@ -8,7 +8,7 @@ export class AppService {
   async getHealth() {
     try {
       await this.dataSource.query('SELECT 1');
-      return { status: 'ok', db: 'okz', kevin: 'nuke' };
+      return { status: 'ok', db: 'okz', kevin: 'nukezs' };
     } catch (error) {
       return { status: 'error', db: 'error', message: (error as Error).message };
     }
