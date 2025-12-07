@@ -25,7 +25,7 @@ Depois de subir, acesse:
 - Frontend React: http://localhost:8082
 
 ## Hot reload com Docker Compose (dev)
-Use o arquivo `docker-compose.dev.yml` junto com o Compose principal para rodar tudo com watch/HMR.
+Use o arquivo `docker-compose.dev.yml` junto com o Compose principal para rodar tudo com watch/HMR (com um MySQL dedicado `db`/`db_data_dev`).
 
 ### Vue + API em modo dev
 ```bash
@@ -34,6 +34,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev --p
 URLs:
 - API (Nest watch): http://localhost:3000/health
 - Frontend Vue (Vite + HMR): http://localhost:8081
+- MySQL (dev): host `localhost`, porta `3307`, credenciais do `.env.example`
 
 ### React + API em modo dev
 ```bash
@@ -42,6 +43,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml --profile dev --p
 URLs:
 - API (Nest watch): http://localhost:3000/health
 - Frontend React (Vite + HMR): http://localhost:8082
+- MySQL (dev): host `localhost`, porta `3307`, credenciais do `.env.example`
 
 > Dica: o Compose principal deixa a API de produção disponível pelos perfis `vue` ou `react`. Para desenvolvimento assistido, use somente os perfis `dev`/`dev-vue` ou `dev`/`dev-react` para evitar subir a versão de produção em paralelo.
 

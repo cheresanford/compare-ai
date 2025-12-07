@@ -1,4 +1,19 @@
 services:
+  db:
+    image: mysql:8.0
+    container_name: tcc_db_dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tcc
+      MYSQL_USER: tcc
+      MYSQL_PASSWORD: tcc
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data_dev:/var/lib/mysql
+    profiles: ["dev"]
+
   api-dev:
     image: node:18-alpine
     container_name: tcc_api_dev
@@ -29,6 +44,7 @@ services:
     depends_on:
       - api-dev
     environment:
+      VITE_API_URL: http://api-dev:3000
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "8081:8081"
@@ -44,7 +60,11 @@ services:
     depends_on:
       - api-dev
     environment:
+      VITE_API_URL: http://api-dev:3000
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "8082:8082"
     profiles: ["dev-react"]
+
+volumes:
+  db_data_dev:
