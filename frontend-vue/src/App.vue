@@ -6,7 +6,7 @@
     <v-main class="d-flex align-center justify-center">
       <v-container class="py-12" style="max-width: 720px;">
         <v-card elevation="6" class="pa-6">
-          <v-card-title class="text-h5 mb-2">Frontend A</v-card-title>
+          <v-card-title class="text-h5 mb-2">Frontend ABs</v-card-title>
           <v-card-text>
             <p class="mb-4">
               Este é o frontend A do experimento. Use o botão abaixo para testar a API NestJS conectada ao MySQL.
