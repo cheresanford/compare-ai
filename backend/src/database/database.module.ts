@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from '../user/user.entity';
 
 @Module({
   imports: [
@@ -12,15 +11,13 @@ import { User } from '../user/user.entity';
         type: 'mysql',
         host: configService.get<string>('DB_HOST', 'localhost'),
         port: parseInt(configService.get<string>('DB_PORT', '3306'), 10),
-        username: configService.get<string>('DB_USER', 'root'),
-        password: configService.get<string>('DB_PASS', ''),
-        database: configService.get<string>('DB_NAME', 'test'),
-        entities: [User],
-        synchronize: true,
+        username: configService.get<string>('DB_USER', 'tcc'),
+        password: configService.get<string>('DB_PASS', 'tcc'),
+        database: configService.get<string>('DB_NAME', 'tcc'),
         autoLoadEntities: true,
+        synchronize: false, // <- baseado
       }),
     }),
-    TypeOrmModule.forFeature([User]),
   ],
   exports: [TypeOrmModule],
 })
