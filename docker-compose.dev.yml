@@ -4,7 +4,7 @@ services:
     container_name: tcc_db_dev
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: tcc
       MYSQL_DATABASE: tcc
       MYSQL_USER: tcc
       MYSQL_PASSWORD: tcc
