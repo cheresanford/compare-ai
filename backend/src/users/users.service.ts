@@ -19,6 +19,19 @@ export class UsersService {
     return this.repo.save(user);
   }
 
+  async update(id: number, dto: Partial<CreateUserDto>) {
+    const user = await this.repo.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('user não encontrado');
+
+    if (dto.email && dto.email !== user.email) {
+      const exists = await this.repo.findOne({ where: { email: dto.email } });
+      if (exists) throw new ConflictException('email já cadastrado');
+    }
+
+    Object.assign(user, dto);
+    return this.repo.save(user);
+  }
+
   findAll() {
     return this.repo.find({ order: { id: 'DESC' } });
   }
