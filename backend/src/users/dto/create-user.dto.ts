@@ -12,6 +12,10 @@ export class CreateUserDto {
   @IsBoolean()
   is_active: boolean;
 
+  @IsOptional()
+  @MaxLength(60)
+  nickname?: string | null;
+
   @Transform(({ value }) => (typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value))
   @IsNotEmpty()
   @MaxLength(120)
