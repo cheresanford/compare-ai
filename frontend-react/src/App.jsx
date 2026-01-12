@@ -50,24 +50,58 @@
 // }
 
 // export default App;
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppLayout } from "./layout/AppLayout";
+import { PageTransition } from "./PageTransition";
 import { UsersCreatePage } from "./pages/UsersCreatePage";
 import { UsersListPage } from "./pages/UsersListPage";
 import { UsersEditPage } from "./pages/UsersEditPage";
+import { AnimatePresence } from "framer-motion";
+import { EventosCreatePage } from "./pages/EventosCreatePage";
 
 export default function App() {
-  return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route path="/" element={<Navigate to="/users" replace />} />
-        <Route path="/users" element={<UsersListPage />} />
-        <Route path="/users/new" element={<UsersCreatePage />} />
-        <Route path="/users/:id/edit" element={<UsersEditPage />} />
-      </Route>
+  const location = useLocation();
 
-      <Route path="*" element={<Navigate to="/users" replace />} />
-    </Routes>
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Navigate to="/users" replace />} />
+
+          <Route
+            path="/users"
+            element={
+              <PageTransition>
+                <UsersListPage />
+              </PageTransition>
+            }
+          />
+
+          <Route
+            path="/users/new"
+            element={
+              <PageTransition>
+                <UsersCreatePage />
+              </PageTransition>
+            }
+          />
+
+          <Route
+            path="/users/:id/edit"
+            element={
+              <PageTransition>
+                <UsersEditPage />
+              </PageTransition>
+            }
+          />
+        <Route path="/eventos/new" element={<PageTransition><EventosCreatePage></EventosCreatePage></PageTransition>} />
+        </Route>
+
+        <Route path="/eventos" element={<PageTransition><div>Eventos List Page (to be implemented)</div></PageTransition>} />
+
+        <Route path="*" element={<Navigate to="/users" replace />} />
+      </Routes>
+    </AnimatePresence>
   );
 }
 
