@@ -16,6 +16,13 @@ export function AppLayout() {
           <Button color="inherit" component={RouterLink} to="/users/new">
             Criar
           </Button>
+
+          <Button color="inherit" component={RouterLink} to="/eventos">
+            Eventos
+          </Button>
+          <Button color="inherit" component={RouterLink} to="/eventos/new">
+            Criar Evento
+          </Button>
         </Toolbar>
       </AppBar>
 

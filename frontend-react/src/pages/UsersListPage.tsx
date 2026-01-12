@@ -1,30 +1,30 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Button, Card, LinearProgress, Paper, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { listUsers, User } from "../api/usersApi";
-
+import { useUsers } from "../hooks/useUsers";
+import { PageTransition } from "../PageTransition";
+import { AnimatePresence } from "framer-motion";
 export function UsersListPage() {
-  const [rows, setRows] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { users: rows, loading, error, refetch: load } = useUsers();
 
-  async function load() {
-    setError(null);
-    setLoading(true);
-    try {
-      const data = await listUsers();
-      setRows(data);
-    } catch (err: any) {
-      setError(err?.message ?? "Erro inesperado");
-    } finally {
-      setLoading(false);
-    }
+  const [testText, setTestText] = useState<string>("Testandooo");
+
+  function changeTestTextValue() {
+    setTestText("Valor alterado");
   }
 
-  useEffect(() => {
-    load();
-  }, []);
+  const [showCard, setShowCard] = useState<boolean>(false);
+
+  function showAnotherCard() {
+    if (!showCard) {
+      setShowCard(true);
+    } else {
+      setShowCard(false);
+    }
+  }
+  
 
   const columns: GridColDef<User>[] = [
     { field: "id", headerName: "ID", width: 90 },
@@ -65,9 +65,17 @@ export function UsersListPage() {
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="h5">Usuários</Typography>
-        <Button variant="contained" component={RouterLink} to="/users/new">
-          Criar usuário
+        <Button variant="outlined" onClick={changeTestTextValue}>
+          Alterar Teste
         </Button>
+        <Button variant="contained" component={RouterLink} to="/users/new">
+          Criar usuário {testText}
+        </Button>
+        {testText === "Testandooo" ? (
+          <LinearProgress sx={{ width: 200 }} />
+        ) : (
+          <Typography>O valor foi alterado</Typography>
+        )}
       </Stack>
 
       {error && (
@@ -95,6 +103,23 @@ export function UsersListPage() {
           disableRowSelectionOnClick
         />
       </Paper>
+      <Card sx={{ p: 2 }}>
+        <Typography variant="body2">
+          <Button onClick={showAnotherCard}>Mostrar Cartão</Button>
+        </Typography>
+      </Card>
+      <AnimatePresence mode="wait">
+      {showCard && (
+        <PageTransition>
+          <Card sx={{ p: 2 }}>
+          <Typography variant="body2">
+            Este é um cartão adicional exibido ao clicar no botão.
+          </Typography>
+          </Card>
+        </PageTransition>
+      )}
+
+      </AnimatePresence>
     </Stack>
   );
 }
