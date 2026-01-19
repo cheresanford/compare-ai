@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { PingModule } from './ping/ping.module';
 import { EchoModule } from './echo/echo.module';
 import { UsersModule } from './users/users.module';
+import { EventosModule } from './eventos/eventos.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { UsersModule } from './users/users.module';
     PingModule,
     EchoModule,
     UsersModule,
+    EventosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
