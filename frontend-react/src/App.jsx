@@ -51,13 +51,8 @@
 
 // export default App;
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
-import { AppLayout } from "./layout/AppLayout";
-import { PageTransition } from "./PageTransition";
-import { UsersCreatePage } from "./pages/UsersCreatePage";
-import { UsersListPage } from "./pages/UsersListPage";
-import { UsersEditPage } from "./pages/UsersEditPage";
 import { AnimatePresence } from "framer-motion";
-import { EventosCreatePage } from "./pages/EventosCreatePage";
+import { HomePage } from "./pages/HomePage";
 
 export default function App() {
   const location = useLocation();
@@ -65,41 +60,8 @@ export default function App() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Navigate to="/users" replace />} />
-
-          <Route
-            path="/users"
-            element={
-              <PageTransition>
-                <UsersListPage />
-              </PageTransition>
-            }
-          />
-
-          <Route
-            path="/users/new"
-            element={
-              <PageTransition>
-                <UsersCreatePage />
-              </PageTransition>
-            }
-          />
-
-          <Route
-            path="/users/:id/edit"
-            element={
-              <PageTransition>
-                <UsersEditPage />
-              </PageTransition>
-            }
-          />
-        <Route path="/eventos/new" element={<PageTransition><EventosCreatePage></EventosCreatePage></PageTransition>} />
-        </Route>
-
-        <Route path="/eventos" element={<PageTransition><div>Eventos List Page (to be implemented)</div></PageTransition>} />
-
-        <Route path="*" element={<Navigate to="/users" replace />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
   );
