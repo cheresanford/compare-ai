@@ -41,7 +41,7 @@ async function testApi() {
   try {
     const res = await fetch(`${apiUrl}/health`);
     const data = await res.json();
-    response.value = data;
+    response.value = data.data;
   } catch (error) {
     response.value = { status: 'error', message: error.message };
   } finally {
