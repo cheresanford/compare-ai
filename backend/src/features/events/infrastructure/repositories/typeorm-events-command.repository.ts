@@ -98,6 +98,10 @@ export class TypeormEventsCommandRepository implements EventsCommandRepository {
     return this.mapEvent(updated);
   }
 
+  async delete(eventId: number): Promise<void> {
+    await this.eventRepository.delete({ id: eventId });
+  }
+
   async findById(eventId: number): Promise<EventCommandResult | null> {
     const event = await this.eventRepository.findOne({
       where: { id: eventId },

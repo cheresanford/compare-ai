@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -9,9 +10,12 @@ import {
   Query,
 } from "@nestjs/common";
 import { CreateEventDto } from "./application/dtos/create-event.dto";
+import { DeleteEventQueryDto } from "./application/dtos/delete-event-query.dto";
 import { ListEventsQueryDto } from "./application/dtos/list-events-query.dto";
 import { UpdateEventDto } from "./application/dtos/update-event.dto";
 import { CreateEventUseCase } from "./application/use-cases/create-event.use-case";
+import { DeleteEventUseCase } from "./application/use-cases/delete-event.use-case";
+import { GetEventDetailsUseCase } from "./application/use-cases/get-event-details.use-case";
 import { ListEventCategoriesUseCase } from "./application/use-cases/list-event-categories.use-case";
 import { ListEventStatusesUseCase } from "./application/use-cases/list-event-statuses.use-case";
 import { ListEventsUseCase } from "./application/use-cases/list-events.use-case";
@@ -23,6 +27,8 @@ export class EventsController {
     private readonly listEventsUseCase: ListEventsUseCase,
     private readonly createEventUseCase: CreateEventUseCase,
     private readonly updateEventUseCase: UpdateEventUseCase,
+    private readonly getEventDetailsUseCase: GetEventDetailsUseCase,
+    private readonly deleteEventUseCase: DeleteEventUseCase,
     private readonly listEventCategoriesUseCase: ListEventCategoriesUseCase,
     private readonly listEventStatusesUseCase: ListEventStatusesUseCase,
   ) {}
@@ -47,11 +53,24 @@ export class EventsController {
     return this.createEventUseCase.execute(body);
   }
 
+  @Get(":id")
+  async details(@Param("id", ParseIntPipe) id: number) {
+    return this.getEventDetailsUseCase.execute(id);
+  }
+
   @Patch(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
     @Body() body: UpdateEventDto,
   ) {
     return this.updateEventUseCase.execute(id, body);
+  }
+
+  @Delete(":id")
+  async remove(
+    @Param("id", ParseIntPipe) id: number,
+    @Query() query: DeleteEventQueryDto,
+  ) {
+    return this.deleteEventUseCase.execute(id, query.confirm);
   }
 }

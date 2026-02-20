@@ -35,6 +35,7 @@ export interface EventsCommandRepository {
     eventId: number,
     payload: SaveEventPayload,
   ): Promise<EventCommandResult>;
+  delete(eventId: number): Promise<void>;
   findById(eventId: number): Promise<EventCommandResult | null>;
   categoryExists(categoryId: number): Promise<boolean>;
   statusExists(status: string): Promise<boolean>;
