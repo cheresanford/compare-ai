@@ -101,3 +101,5 @@ docker run --rm ^
 > Em PowerShell, se preferir, use `${PWD}` no lugar de `%cd%`.
 
 O scanner usa o arquivo `sonar-project.properties` na raiz do projeto.
+
+sqa_a4081e0d3f474ee63455d6f8300eadaf8fe6e2e3
