@@ -58,3 +58,46 @@ URLs:
 - `frontend-react/`: React + MUI com botão para testar a API.
 - `docker-compose.yml`: orquestração com serviços `db`, `api` (profiles `vue` e `react`), `web-vue` (profile `vue`) e `web-react` (profile `react`).
 - `docker-compose.dev.yml`: serviços de desenvolvimento com hot reload (`api-dev`, `web-vue-dev`, `web-react-dev`).
+
+## SonarQube (análise estática)
+
+### 1) Subir o SonarQube
+```bash
+docker compose -f docker-compose.dev.yml --profile sonar up -d
+```
+
+Abra: http://localhost:9000  
+Primeiro acesso padrão: `admin` / `admin` (troque a senha ao entrar).
+
+### 2) Gerar token no SonarQube
+- No SonarQube: **My Account → Security → Generate Tokens**
+- Copie o token para usar no scanner.
+
+### 3) (Opcional) gerar cobertura de testes
+Se quiser incluir cobertura no relatório, gere `lcov.info` nos projetos:
+
+```bash
+# backend
+cd backend && npm install && npm run test:cov
+
+# frontend react (se houver setup de testes/coverage)
+cd ../frontend-react && npm install && npm run test -- --coverage
+
+# frontend vue (se houver setup de testes/coverage)
+cd ../frontend-vue && npm install && npm run test -- --coverage
+```
+
+### 4) Rodar o scanner (sem instalar nada local)
+Na raiz do monorepo, execute:
+
+```bash
+docker run --rm ^
+	-e SONAR_HOST_URL=http://host.docker.internal:9000 ^
+	-e SONAR_TOKEN=SEU_TOKEN_AQUI ^
+	-v "%cd%:/usr/src" ^
+	sonarsource/sonar-scanner-cli
+```
+
+> Em PowerShell, se preferir, use `${PWD}` no lugar de `%cd%`.
+
+O scanner usa o arquivo `sonar-project.properties` na raiz do projeto.
