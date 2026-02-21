@@ -37,7 +37,8 @@ export function HomePage() {
 
     try {
       const traceId = globalThis.crypto?.randomUUID?.();
-      const res = await fetch(`${apiUrl}/health`,
+      const res = await fetch(
+        `${apiUrl}/health`,
         traceId ? { headers: { "x-trace-id": traceId } } : undefined,
       );
 
@@ -75,7 +76,9 @@ export function HomePage() {
               variant="contained"
               onClick={testApi}
               disabled={loading}
-              startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}
+              startIcon={
+                loading ? <CircularProgress size={18} color="inherit" /> : null
+              }
             >
               {loading ? "Chamando /health..." : "Testar /health do backend"}
             </Button>
