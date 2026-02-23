@@ -1,103 +1,31 @@
-import { useMemo, useState } from "react";
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CircularProgress,
-  Container,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-
-const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
-const SAYINGS = [
-  "Se der certo de primeira, desconfie.",
-  "Nada é tão permanente quanto uma gambiarra temporária.",
-  "Hoje vai. Amanhã também.",
-  "Deploy na sexta? Coragem.",
-  "Funciona na minha máquina.",
-];
+﻿import { Alert, Button, Card, CardContent, Stack, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 export function HomePage() {
-  const saying = useMemo(() => {
-    const index = Math.floor(Math.random() * SAYINGS.length);
-    return SAYINGS[index];
-  }, []);
-
-  const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState(null);
-
-  const testApi = async () => {
-    setLoading(true);
-    setResponse(null);
-
-    try {
-      const traceId = globalThis.crypto?.randomUUID?.();
-      const res = await fetch(
-        `${apiUrl}/health`,
-        traceId ? { headers: { "x-trace-id": traceId } } : undefined,
-      );
-
-      const data = await res.json();
-      setResponse({ ok: res.ok, status: res.status, data });
-    } catch (error) {
-      setResponse({ ok: false, status: 0, data: { message: error?.message } });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Compare AI — React
+    <Card elevation={4}>
+      <CardContent>
+        <Stack spacing={2}>
+          <Typography variant="h4">TeamMeet Planner</Typography>
+          <Typography color="text.secondary">
+            Módulo de eventos disponível com listagem, busca, paginação, ordenação e CRUD.
           </Typography>
-        </Toolbar>
-      </AppBar>
 
-      <Container maxWidth="sm" sx={{ py: 6 }}>
-        <Card elevation={6}>
-          <CardContent>
-            <Typography variant="h4" gutterBottom>
-              Página inicial
-            </Typography>
+          <Alert severity="info">
+            Use a navegação acima para acessar lista, cadastro, edição, detalhe e exclusão.
+          </Alert>
 
-            <Typography color="text.secondary" sx={{ mb: 3 }}>
-              {saying}
-            </Typography>
-
-            <Button
-              variant="contained"
-              onClick={testApi}
-              disabled={loading}
-              startIcon={
-                loading ? <CircularProgress size={18} color="inherit" /> : null
-              }
-            >
-              {loading ? "Chamando /health..." : "Testar /health do backend"}
+          <Stack direction="row" spacing={1}>
+            <Button variant="contained" component={RouterLink} to="/events">
+              Ir para lista de eventos
             </Button>
-
-            {response && (
-              <Alert
-                sx={{ mt: 3, wordBreak: "break-word" }}
-                severity={response.ok ? "success" : "error"}
-              >
-                {JSON.stringify(response)}
-              </Alert>
-            )}
-
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
-              API: {apiUrl}
-            </Typography>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+            <Button variant="outlined" component={RouterLink} to="/events/new">
+              Cadastrar evento
+            </Button>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }
+

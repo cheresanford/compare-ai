@@ -1,68 +1,65 @@
-// import { useState } from 'react';
-// import { AppBar, Toolbar, Typography, Container, Card, CardContent, Button, Alert, CircularProgress } from '@mui/material';
-
-// const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-
-// function App() {
-//   const [loading, setLoading] = useState(false);
-//   const [response, setResponse] = useState(null);
-
-//   const testApi = async () => {
-//     setLoading(true);
-//     try {
-//       const res = await fetch(`${apiUrl}/health`);
-//       const data = await res.json();
-//       setResponse(data);
-//     } catch (error) {
-//       setResponse({ status: 'error', message: error.message });
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return (
-//     <>
-//       <AppBar position="static" color="primary">
-//         <Toolbar>
-//           <Typography variant="h6" component="div">HelpDesk Lite (React + MUI)</Typography>
-//         </Toolbar>
-//       </AppBar>
-//       <Container maxWidth="sm" sx={{ mt: 6 }}>
-//         <Card elevation={6}>
-//           <CardContent>
-//             <Typography variant="h5" gutterBottom>Frontend B</Typography>
-//             <Typography paragraph>
-//               Este é o frontend B do experimento. Clique no botão para testar a API NestJS conectada ao MySQL.
-//             </Typography>
-//             <Button variant="contained" onClick={testApi} disabled={loading} startIcon={loading ? <CircularProgress size={18} color="inherit" /> : null}>
-//               {loading ? 'Chamando...' : 'Testar API'}
-//             </Button>
-//             {response && (
-//               <Alert severity={response.status === 'ok' ? 'success' : 'error'} sx={{ mt: 3 }}>
-//                 {JSON.stringify(response)}
-//               </Alert>
-//             )}
-//           </CardContent>
-//         </Card>
-//       </Container>
-//     </>
-//   );
-// }
-
-// export default App;
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+﻿import {
+  AppBar,
+  Box,
+  Button,
+  Container,
+  Toolbar,
+  Typography,
+} from "@mui/material";
 import { AnimatePresence } from "framer-motion";
+import { Link as RouterLink, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { HomePage } from "./pages/HomePage";
+import { EventsApiProvider } from "./features/events/providers/EventsApiProvider";
+import { EventsListPage } from "./features/events/pages/EventsListPage";
+import { EventFormPage } from "./features/events/pages/EventFormPage";
+import { EventDetailPage } from "./features/events/pages/EventDetailPage";
+
+function Shell({ children }) {
+  return (
+    <Box>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            TeamMeet Planner
+          </Typography>
+
+          <Button color="inherit" component={RouterLink} to="/">
+            Home
+          </Button>
+          <Button color="inherit" component={RouterLink} to="/events">
+            Eventos
+          </Button>
+          <Button color="inherit" component={RouterLink} to="/events/new">
+            Criar Evento
+          </Button>
+        </Toolbar>
+      </AppBar>
+
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {children}
+      </Container>
+    </Box>
+  );
+}
 
 export default function App() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AnimatePresence>
+    <EventsApiProvider>
+      <Shell>
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/events" element={<EventsListPage />} />
+            <Route path="/events/new" element={<EventFormPage />} />
+            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route path="/events/:id/edit" element={<EventFormPage />} />
+            <Route path="*" element={<Navigate to="/events" replace />} />
+          </Routes>
+        </AnimatePresence>
+      </Shell>
+    </EventsApiProvider>
   );
 }
+
