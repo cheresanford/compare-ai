@@ -52,7 +52,9 @@
 // export default App;
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
-import { HomePage } from "./pages/HomePage";
+import { EventListPage } from "./pages/EventListPage";
+import { EventFormPage } from "./pages/EventFormPage";
+import { EventDetailPage } from "./pages/EventDetailPage";
 
 export default function App() {
   const location = useLocation();
@@ -60,7 +62,11 @@ export default function App() {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Navigate to="/eventos" replace />} />
+        <Route path="/eventos" element={<EventListPage />} />
+        <Route path="/eventos/new" element={<EventFormPage mode="create" />} />
+        <Route path="/eventos/:id" element={<EventDetailPage />} />
+        <Route path="/eventos/:id/edit" element={<EventFormPage mode="edit" />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>
