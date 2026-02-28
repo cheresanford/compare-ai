@@ -4,7 +4,7 @@
       <v-app-bar-title>TeamMeet Planner (Vue + Vuetify)</v-app-bar-title>
       <v-spacer />
       <v-btn variant="text" to="/">Início</v-btn>
-      <v-btn variant="text" to="/sobre">Sobre</v-btn>
+      <v-btn variant="text" to="/listagem">Listagem</v-btn>
     </v-app-bar>
     <v-main>
       <router-view />
