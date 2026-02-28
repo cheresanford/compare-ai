@@ -8,6 +8,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "vue-router": "^4.5.1",
     "vue": "^3.4.21",
     "vuetify": "^3.5.7"
   },
