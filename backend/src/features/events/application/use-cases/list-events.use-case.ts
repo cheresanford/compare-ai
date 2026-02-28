@@ -18,6 +18,7 @@ export class ListEventsUseCase {
       page: query.page ?? 1,
       size: query.size ?? 10,
       search: query.search,
+      categoryId: query.categoryId,
       sortBy: query.sortBy ?? "startDate",
       sortDirection: query.sortDirection ?? "asc",
     });

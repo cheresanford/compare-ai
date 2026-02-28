@@ -27,11 +27,18 @@ export class TypeormEventsListRepository implements EventsListRepository {
     const queryBuilder = this.eventRepository
       .createQueryBuilder("event")
       .leftJoinAndSelect("event.user", "user")
-      .leftJoinAndSelect("event.status", "status");
+      .leftJoinAndSelect("event.status", "status")
+      .leftJoinAndSelect("event.category", "category");
 
     if (params.search) {
       queryBuilder.andWhere("event.title LIKE :search", {
         search: `%${params.search}%`,
+      });
+    }
+
+    if (params.categoryId) {
+      queryBuilder.andWhere("event.category_id = :categoryId", {
+        categoryId: params.categoryId,
       });
     }
 
@@ -53,6 +60,12 @@ export class TypeormEventsListRepository implements EventsListRepository {
         startDate: event.startDate,
         endDate: event.endDate,
         status: event.status.name,
+        category: event.category
+          ? {
+              id: event.category.id,
+              name: event.category.name,
+            }
+          : null,
         organizer: {
           id: event.user.id,
           name: event.user.name,

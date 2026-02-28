@@ -51,13 +51,16 @@
 
 // export default App;
 import { Navigate, Route, Routes } from "react-router-dom";
+import { CategoriesPage } from "./features/categories/pages/CategoriesPage";
 import { EventsPage } from "./features/events/pages/EventsPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<EventsPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/" element={<Navigate to="/events" replace />} />
+      <Route path="/events" element={<EventsPage />} />
+      <Route path="/categories" element={<CategoriesPage />} />
+      <Route path="*" element={<Navigate to="/events" replace />} />
     </Routes>
   );
 }
