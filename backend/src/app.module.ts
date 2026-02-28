@@ -3,6 +3,7 @@ import { ConfigModule } from "@nestjs/config";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { DatabaseModule } from "./database/database.module";
+import { CategoriesFeatureModule } from "./features/categories/categories.feature.module";
 import { EventsFeatureModule } from "./features/events/events.feature.module";
 import { CategoriesModule } from "./tables/categories/categories.module";
 import { EventStatusesModule } from "./tables/event-statuses/event-statuses.module";
@@ -18,6 +19,7 @@ import { UsersModule } from "./tables/users/users.module";
     EventStatusesModule,
     EventsModule,
     EventsFeatureModule,
+    CategoriesFeatureModule,
   ],
   controllers: [AppController],
   providers: [AppService],

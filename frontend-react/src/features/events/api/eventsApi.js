@@ -38,6 +38,10 @@ export async function listEvents(params) {
     query.set("search", params.search.trim());
   }
 
+  if (params.categoryId) {
+    query.set("categoryId", String(params.categoryId));
+  }
+
   return request(`/events?${query.toString()}`);
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
   AppBar,
@@ -22,6 +23,7 @@ import {
   Toolbar,
   Typography,
 } from "@mui/material";
+import { listCategories } from "../../categories/api/categoriesApi";
 import { deleteEvent, listEvents } from "../api/eventsApi";
 import { EventDetailsDialog } from "../components/EventDetailsDialog";
 import { EventFormDialog } from "../components/EventFormDialog";
@@ -40,6 +42,8 @@ export function EventsPage() {
   const [size, setSize] = useState(10);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [categories, setCategories] = useState([]);
   const [sortBy, setSortBy] = useState("startDate");
   const [sortDirection, setSortDirection] = useState("asc");
   const [loading, setLoading] = useState(false);
@@ -70,6 +74,7 @@ export function EventsPage() {
           page: page + 1,
           size,
           search,
+          categoryId: categoryId ? Number(categoryId) : undefined,
           sortBy,
           sortDirection,
         });
@@ -93,7 +98,30 @@ export function EventsPage() {
     return () => {
       isActive = false;
     };
-  }, [page, size, search, sortBy, sortDirection, reloadToken]);
+  }, [page, size, search, categoryId, sortBy, sortDirection, reloadToken]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadCategories() {
+      try {
+        const items = await listCategories();
+        if (isActive) {
+          setCategories(items || []);
+        }
+      } catch {
+        if (isActive) {
+          setCategories([]);
+        }
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   function refreshList() {
     setReloadToken((current) => current + 1);
@@ -135,6 +163,15 @@ export function EventsPage() {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             TeamMeet Planner — Eventos
           </Typography>
+          <Button
+            component={RouterLink}
+            to="/categories"
+            variant="outlined"
+            color="inherit"
+            sx={{ mr: 1 }}
+          >
+            Categorias
+          </Button>
           <Button
             variant="contained"
             color="secondary"
@@ -185,6 +222,26 @@ export function EventsPage() {
               spacing={2}
               sx={{ mb: 2 }}
             >
+              <FormControl size="small" sx={{ minWidth: 260 }}>
+                <InputLabel id="category-filter-label">Categoria</InputLabel>
+                <Select
+                  labelId="category-filter-label"
+                  label="Categoria"
+                  value={categoryId}
+                  onChange={(event) => {
+                    setCategoryId(event.target.value);
+                    setPage(0);
+                  }}
+                >
+                  <MenuItem value="">Todas as categorias</MenuItem>
+                  {categories.map((category) => (
+                    <MenuItem key={category.id} value={String(category.id)}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <FormControl size="small" sx={{ minWidth: 220 }}>
                 <InputLabel id="sort-by-label">Ordenar por</InputLabel>
                 <Select
@@ -231,6 +288,7 @@ export function EventsPage() {
                   <TableCell>Início</TableCell>
                   <TableCell>Término</TableCell>
                   <TableCell>Status</TableCell>
+                  <TableCell>Categoria</TableCell>
                   <TableCell>Organizador</TableCell>
                   <TableCell align="right">Ações</TableCell>
                 </TableRow>
@@ -238,7 +296,7 @@ export function EventsPage() {
               <TableBody>
                 {events.length === 0 && !loading ? (
                   <TableRow>
-                    <TableCell colSpan={6}>
+                    <TableCell colSpan={7}>
                       <Typography variant="body2" color="text.secondary">
                         Nenhum evento encontrado.
                       </Typography>
@@ -252,6 +310,9 @@ export function EventsPage() {
                     <TableCell>{formatDate(eventItem.startDate)}</TableCell>
                     <TableCell>{formatDate(eventItem.endDate)}</TableCell>
                     <TableCell>{eventItem.status}</TableCell>
+                    <TableCell>
+                      {eventItem.category?.name || "Sem categoria"}
+                    </TableCell>
                     <TableCell>{eventItem.organizer?.name || "-"}</TableCell>
                     <TableCell align="right">
                       <Stack

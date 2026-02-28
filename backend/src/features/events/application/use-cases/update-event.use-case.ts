@@ -50,7 +50,10 @@ export class UpdateEventUseCase {
       }
     }
 
-    const nextCategoryId = dto.categoryId ?? currentEvent.categoryId ?? null;
+    const nextCategoryId =
+      dto.categoryId === null
+        ? null
+        : (dto.categoryId ?? currentEvent.categoryId ?? null);
     if (nextCategoryId) {
       const categoryExists =
         await this.eventsCommandRepository.categoryExists(nextCategoryId);

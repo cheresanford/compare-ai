@@ -5,6 +5,7 @@ export interface ListEventsParams {
   page: number;
   size: number;
   search?: string;
+  categoryId?: number;
   sortBy: EventSortBy;
   sortDirection: SortDirection;
 }
@@ -15,6 +16,10 @@ export interface EventListItem {
   startDate: Date;
   endDate: Date;
   status: string;
+  category: {
+    id: number;
+    name: string;
+  } | null;
   organizer: {
     id: number;
     name: string;
