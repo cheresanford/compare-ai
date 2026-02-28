@@ -23,54 +23,35 @@ import {
   Typography,
 } from "@mui/material";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { deleteEvent } from "../../services/eventsApi";
 import {
-  deleteEvent,
-  getEventOptions,
-  listEvents,
-} from "../services/eventsApi";
+  deleteCategory,
+  listCategories,
+} from "../../services/categories/categoriesApi";
 
-function formatDate(value) {
-  if (!value) return "-";
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-export function EventListPage() {
+export function CategoriaListPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [events, setEvents] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
-  const [sortBy, setSortBy] = useState("startDate");
-  const [sortOrder, setSortOrder] = useState("ASC");
-  const [categoryOptions, setCategoryOptions] = useState([]);
 
-  const handleChange = (field) => (event) => {
-    setForm((current) => ({ ...current, [field]: event.target.value }));
-  };
-
-  const loadEvents = useCallback(async () => {
+  const loadCategories = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const result = await listEvents({
+      const result = await listCategories({
         page,
         size,
         search,
-        sortBy,
-        sortOrder,
-        categoryOptions,
       });
 
-      options();
-      setEvents(result.items || []);
+      setCategories(result.items || []);
       setTotal(result.total || 0);
       setTotalPages(result.totalPages || 1);
     } catch (err) {
@@ -78,34 +59,24 @@ export function EventListPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, size, search, sortBy, sortOrder, categoryOptions]);
+  }, [page, size, search]);
 
   useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
-
-  const options = async () => {
-    const respostaAPI = await getEventOptions()
-      .then((resp) => resp.json)
-      .then((data) => {
-        setCategoryOptions(data.categories);
-      });
-
-    return respostaAPI;
-  };
+    loadCategories();
+  }, [loadCategories]);
 
   const handleSearch = () => {
     setPage(1);
     setSearch(searchInput.trim());
   };
 
-  const handleDelete = async (id, title) => {
-    const confirmed = window.confirm(`Excluir o evento "${title}"?`);
+  const handleDelete = async (id, name) => {
+    const confirmed = window.confirm(`Excluir a Categoria "${name}"?`);
     if (!confirmed) return;
 
     try {
-      await deleteEvent(id);
-      await loadEvents();
+      await deleteCategory(id);
+      await loadCategories();
     } catch (err) {
       setError(err.message);
     }
@@ -128,13 +99,13 @@ export function EventListPage() {
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            TeamMeet Planner
+            TeamMeet Planner - Categorias
           </Typography>
-          <Button color="inherit" component={RouterLink} to="/categorias">
-            Categorias
+          <Button color="inherit" component={RouterLink} to="/events">
+            Eventos
           </Button>
-          <Button color="inherit" component={RouterLink} to="/eventos/new">
-            Novo evento
+          <Button color="inherit" component={RouterLink} to="/categoria/new">
+            Nova Categoria
           </Button>
         </Toolbar>
       </AppBar>
@@ -148,7 +119,7 @@ export function EventListPage() {
               sx={{ mb: 3 }}
             >
               <TextField
-                label="Buscar por título"
+                label="Buscar por nome"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -166,38 +137,6 @@ export function EventListPage() {
               gap={2}
               sx={{ mb: 3 }}
             >
-              <FormControl size="small" sx={{ minWidth: 220 }}>
-                <InputLabel id="sort-by-label">Ordenar por</InputLabel>
-                <Select
-                  labelId="sort-by-label"
-                  label="Ordenar por"
-                  value={sortBy}
-                  onChange={(e) => {
-                    setPage(1);
-                    setSortBy(e.target.value);
-                  }}
-                >
-                  <MenuItem value="startDate">Data de início</MenuItem>
-                  <MenuItem value="createdAt">Data de criação</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" sx={{ minWidth: 170 }}>
-                <InputLabel id="sort-order-label">Ordem</InputLabel>
-                <Select
-                  labelId="sort-order-label"
-                  label="Ordem"
-                  value={sortOrder}
-                  onChange={(e) => {
-                    setPage(1);
-                    setSortOrder(e.target.value);
-                  }}
-                >
-                  <MenuItem value="ASC">Ascendente</MenuItem>
-                  <MenuItem value="DESC">Descendente</MenuItem>
-                </Select>
-              </FormControl>
-
               <FormControl size="small" sx={{ minWidth: 120 }}>
                 <InputLabel id="page-size-label">Tamanho</InputLabel>
                 <Select
@@ -212,22 +151,6 @@ export function EventListPage() {
                   <MenuItem value={5}>5</MenuItem>
                   <MenuItem value={10}>10</MenuItem>
                   <MenuItem value={20}>20</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl size="small" sx={{ minWidth: 240 }}>
-                <InputLabel id="category-label">Categoria</InputLabel>
-                <Select
-                  labelId="category-label"
-                  label="Categoria"
-                  value={categoryOptions}
-                  onChange={handleChange("categoryId")}
-                >
-                  <MenuItem value="">Sem categoria</MenuItem>
-                  {categoryOptions.map((category) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
                 </Select>
               </FormControl>
             </Stack>
@@ -246,16 +169,13 @@ export function EventListPage() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Título</TableCell>
-                    <TableCell>Início</TableCell>
-                    <TableCell>Término</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Organizador</TableCell>
+                    <TableCell>Nome</TableCell>
+
                     <TableCell align="right">Ações</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {events.length === 0 && (
+                  {categories.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={6}>
                         Nenhum evento encontrado.
@@ -263,13 +183,10 @@ export function EventListPage() {
                     </TableRow>
                   )}
 
-                  {events.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>{event.title}</TableCell>
-                      <TableCell>{formatDate(event.startDate)}</TableCell>
-                      <TableCell>{formatDate(event.endDate)}</TableCell>
-                      <TableCell>{event.status}</TableCell>
-                      <TableCell>{event.organizerEmail}</TableCell>
+                  {categories.map((category) => (
+                    <TableRow key={category.id}>
+                      <TableCell>{category.name}</TableCell>
+
                       <TableCell align="right">
                         <Stack
                           direction="row"
@@ -278,14 +195,16 @@ export function EventListPage() {
                         >
                           <Button
                             size="small"
-                            onClick={() => navigate(`/eventos/${event.id}`)}
+                            onClick={() =>
+                              navigate(`/categoria/${category.id}`)
+                            }
                           >
                             Ver
                           </Button>
                           <Button
                             size="small"
                             onClick={() =>
-                              navigate(`/eventos/${event.id}/edit`)
+                              navigate(`/categorias/${category.id}/edit`)
                             }
                           >
                             Editar
@@ -293,7 +212,9 @@ export function EventListPage() {
                           <Button
                             size="small"
                             color="error"
-                            onClick={() => handleDelete(event.id, event.title)}
+                            onClick={() =>
+                              handleDelete(category.id, category.name)
+                            }
                           >
                             Excluir
                           </Button>
@@ -313,7 +234,7 @@ export function EventListPage() {
               sx={{ mt: 3 }}
             >
               <Typography variant="body2" color="text.secondary">
-                Página {page} de {totalPages} - Total de {total} evento(s)
+                Página {page} de {totalPages} - Total de {total} categoria(s)
               </Typography>
 
               <Stack direction="row" gap={1}>

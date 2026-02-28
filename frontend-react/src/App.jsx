@@ -55,6 +55,9 @@ import { AnimatePresence } from "framer-motion";
 import { EventListPage } from "./pages/EventListPage";
 import { EventFormPage } from "./pages/EventFormPage";
 import { EventDetailPage } from "./pages/EventDetailPage";
+import { CategoriaFormPage } from "./pages/Categoria/CategoriaFormPage";
+import { CategoriaListPage } from "./pages/Categoria/CategoriaListPage";
+import { CategoriaDetailPage } from "./pages/Categoria/CategoriaDetailPage";
 
 export default function App() {
   const location = useLocation();
@@ -65,8 +68,21 @@ export default function App() {
         <Route path="/" element={<Navigate to="/eventos" replace />} />
         <Route path="/eventos" element={<EventListPage />} />
         <Route path="/eventos/new" element={<EventFormPage mode="create" />} />
+        <Route path="/categorias" element={<CategoriaListPage />} />
+        <Route
+          path="/categoria/new"
+          element={<CategoriaFormPage mode="create" />}
+        />
+        <Route path="/categoria/:id" element={<CategoriaDetailPage />} />
+        <Route
+          path="/categorias/:id/edit"
+          element={<CategoriaFormPage mode="edit" />}
+        />
         <Route path="/eventos/:id" element={<EventDetailPage />} />
-        <Route path="/eventos/:id/edit" element={<EventFormPage mode="edit" />} />
+        <Route
+          path="/eventos/:id/edit"
+          element={<EventFormPage mode="edit" />}
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AnimatePresence>

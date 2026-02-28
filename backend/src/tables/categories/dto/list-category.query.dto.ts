@@ -1,7 +1,7 @@
 import { Transform, Type } from "class-transformer";
 import { IsIn, IsInt, IsOptional, IsString, Max, Min } from "class-validator";
 
-export class ListEventsQueryDto {
+export class ListCategoryQueryDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -19,10 +19,6 @@ export class ListEventsQueryDto {
   @IsString()
   @Transform(({ value }) => (typeof value === "string" ? value.trim() : value))
   search?: string;
-
-  @IsOptional()
-  @Type(() => Number)
-  categoryId?: number;
 
   @IsOptional()
   @IsIn(["startDate", "createdAt"])

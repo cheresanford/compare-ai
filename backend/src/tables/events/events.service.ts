@@ -2,16 +2,16 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Repository } from 'typeorm';
-import { Event } from './entities/event.entity';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
-import { ListEventsQueryDto } from './dto/list-events.query.dto';
-import { User } from '../users/entities/user.entity';
-import { EventStatus } from '../event-statuses/entities/event-status.entity';
-import { Category } from '../categories/entities/category.entity';
+} from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { ILike, Repository } from "typeorm";
+import { Event } from "./entities/event.entity";
+import { CreateEventDto } from "./dto/create-event.dto";
+import { UpdateEventDto } from "./dto/update-event.dto";
+import { ListEventsQueryDto } from "./dto/list-events.query.dto";
+import { User } from "../users/entities/user.entity";
+import { EventStatus } from "../event-statuses/entities/event-status.entity";
+import { Category } from "../categories/entities/category.entity";
 
 @Injectable()
 export class EventsService {
@@ -29,13 +29,15 @@ export class EventsService {
   async list(query: ListEventsQueryDto) {
     const page = query.page ?? 1;
     const size = query.size ?? 10;
-    const sortBy = query.sortBy ?? 'startDate';
-    const sortOrder = query.sortOrder ?? 'ASC';
-    const search = query.search ?? '';
+    const sortBy = query.sortBy ?? "startDate";
+    const sortOrder = query.sortOrder ?? "ASC";
+    const search = query.search ?? "";
+    const categoryId = query.categoryId ?? null;
 
     const where = search
       ? {
           title: ILike(`%${search}%`),
+          categoryId: categoryId,
         }
       : {};
 
@@ -44,6 +46,7 @@ export class EventsService {
       relations: {
         user: true,
         status: true,
+        category: true,
       },
       order: {
         [sortBy]: sortOrder,
@@ -72,7 +75,7 @@ export class EventsService {
     });
 
     if (!event) {
-      throw new NotFoundException('Evento não encontrado');
+      throw new NotFoundException("Evento não encontrado");
     }
 
     return this.toEventDetail(event);
@@ -86,7 +89,7 @@ export class EventsService {
     });
 
     if (!status) {
-      throw new BadRequestException('Status inválido');
+      throw new BadRequestException("Status inválido");
     }
 
     let category: Category | null = null;
@@ -96,7 +99,7 @@ export class EventsService {
       });
 
       if (!category) {
-        throw new BadRequestException('Categoria inválida');
+        throw new BadRequestException("Categoria inválida");
       }
     }
 
@@ -122,7 +125,7 @@ export class EventsService {
   async update(id: number, input: UpdateEventDto) {
     const event = await this.eventsRepository.findOne({ where: { id } });
     if (!event) {
-      throw new NotFoundException('Evento não encontrado');
+      throw new NotFoundException("Evento não encontrado");
     }
 
     const nextStartDate = input.startDate ?? event.startDate.toISOString();
@@ -134,7 +137,7 @@ export class EventsService {
         where: { id: input.statusId },
       });
       if (!status) {
-        throw new BadRequestException('Status inválido');
+        throw new BadRequestException("Status inválido");
       }
       event.statusId = status.id;
     }
@@ -147,7 +150,7 @@ export class EventsService {
           where: { id: input.categoryId },
         });
         if (!category) {
-          throw new BadRequestException('Categoria inválida');
+          throw new BadRequestException("Categoria inválida");
         }
         event.categoryId = category.id;
       }
@@ -181,7 +184,7 @@ export class EventsService {
   async remove(id: number) {
     const event = await this.eventsRepository.findOne({ where: { id } });
     if (!event) {
-      throw new NotFoundException('Evento não encontrado');
+      throw new NotFoundException("Evento não encontrado");
     }
 
     await this.eventsRepository.remove(event);
@@ -190,8 +193,8 @@ export class EventsService {
 
   async options() {
     const [statuses, categories] = await Promise.all([
-      this.statusesRepository.find({ order: { id: 'ASC' } }),
-      this.categoriesRepository.find({ order: { name: 'ASC' } }),
+      this.statusesRepository.find({ order: { id: "ASC" } }),
+      this.categoriesRepository.find({ order: { name: "ASC" } }),
     ]);
 
     return { statuses, categories };
@@ -207,7 +210,7 @@ export class EventsService {
       endDate.getTime() <= startDate.getTime()
     ) {
       throw new BadRequestException(
-        'A data de término deve ser maior que a data de início',
+        "A data de término deve ser maior que a data de início",
       );
     }
   }
@@ -218,7 +221,7 @@ export class EventsService {
       return existing;
     }
 
-    const fallbackName = email.split('@')[0] || 'Organizador';
+    const fallbackName = email.split("@")[0] || "Organizador";
     const user = this.usersRepository.create({
       email,
       name: name?.trim() || fallbackName,
