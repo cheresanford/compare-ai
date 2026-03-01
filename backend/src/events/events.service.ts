@@ -76,6 +76,16 @@ export class EventsService {
 
     const category = await this.resolveCategory(dto.categoryId);
 
+    const conflictCount = await this.OrganizerConflict(
+      dto.organizerEmail,
+      dto.startDate,
+      dto.endDate,
+    );
+
+    if (conflictCount > 0) {
+      throw new BadRequestException("Horario já ocupado por um organizador");
+    }
+
     const event = this.eventsRepository.create({
       title: dto.title,
       startDate: dto.startDate,
@@ -97,6 +107,16 @@ export class EventsService {
     const endDate = dto.endDate ?? existing.endDate;
     this.assertDateRange(startDate, endDate);
 
+    const conflictCount = await this.OrganizerConflict(
+      dto.organizerEmail,
+      dto.startDate,
+      dto.endDate,
+      id,
+    );
+
+    if (conflictCount > 0) {
+      throw new BadRequestException("Horario já ocupado por um organizador");
+    }
     const category =
       dto.categoryId === undefined
         ? undefined
@@ -148,5 +168,28 @@ export class EventsService {
     }
 
     return category;
+  }
+
+  private async OrganizerConflict(
+    organizerEmail: string,
+    startDate: Date,
+    endDate: Date,
+    eventIdEdit?: number,
+  ) {
+    const qbOrganizerConflict = await this.eventsRepository
+      .createQueryBuilder("event")
+      .where("event.organizerEmail = :organizerEmail", { organizerEmail })
+      .andWhere("event.startDate < :endDate", { endDate })
+      .andWhere("event.endDate > :startDate", { startDate });
+
+    if (eventIdEdit !== undefined) {
+      qbOrganizerConflict.andWhere("event.id != :eventIdEdit", {
+        eventIdEdit,
+      });
+    }
+
+    const conflictCount = await qbOrganizerConflict.getCount();
+
+    return conflictCount;
   }
 }
