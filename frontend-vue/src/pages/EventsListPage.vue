@@ -57,6 +57,18 @@
             style="min-width: 170px"
           />
 
+          <v-select
+            v-model="categoryId"
+            :items="categoryItems"
+            item-title="title"
+            item-value="value"
+            label="Categoria"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            style="min-width: 220px"
+          />
+
           <v-spacer />
 
           <v-btn variant="tonal" @click="refresh" :loading="loading">
@@ -74,6 +86,7 @@
           <thead>
             <tr>
               <th>Título</th>
+              <th>Categoria</th>
               <th>Início</th>
               <th>Término</th>
               <th>Status</th>
@@ -83,12 +96,13 @@
           </thead>
           <tbody>
             <tr v-if="!loading && items.length === 0">
-              <td colspan="6" class="text-medium-emphasis">
+              <td colspan="7" class="text-medium-emphasis">
                 Nenhum evento encontrado.
               </td>
             </tr>
             <tr v-for="ev in items" :key="ev.id">
               <td class="font-weight-medium">{{ ev.title }}</td>
+              <td>{{ ev.category?.name || "-" }}</td>
               <td>{{ formatDateTime(ev.startDate) }}</td>
               <td>{{ formatDateTime(ev.endDate) }}</td>
               <td>
@@ -168,6 +182,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { eventsApi } from "../services/eventsApi";
+import { categoriesApi } from "../services/categoriesApi";
 import { formatDateTime } from "../utils/dateTime";
 
 const loading = ref(false);
@@ -182,6 +197,14 @@ const q = ref("");
 
 const sortBy = ref("startDate");
 const sortDir = ref("ASC");
+
+const categoryId = ref(null);
+const categories = ref([]);
+
+const categoryItems = computed(() => [
+  { title: "Todas", value: null },
+  ...categories.value.map((c) => ({ title: c.name, value: c.id })),
+]);
 
 const sortByItems = [
   { title: "Data de início", value: "startDate" },
@@ -211,6 +234,11 @@ watch([page, size, sortBy, sortDir], () => {
   refresh();
 });
 
+watch(categoryId, () => {
+  page.value = 1;
+  refresh();
+});
+
 async function refresh() {
   loading.value = true;
   error.value = "";
@@ -221,6 +249,7 @@ async function refresh() {
       q: q.value,
       sortBy: sortBy.value,
       sortDir: sortDir.value,
+      categoryId: categoryId.value,
     });
 
     items.value = data.items;
@@ -262,7 +291,16 @@ async function confirmDelete() {
 }
 
 onMounted(() => {
-  refresh();
+  (async () => {
+    try {
+      categories.value = await categoriesApi.list();
+    } catch {
+      // Sem bloquear a tela de eventos caso categorias estejam indisponíveis.
+      categories.value = [];
+    }
+
+    refresh();
+  })();
 });
 </script>
 

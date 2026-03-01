@@ -2,10 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 import { EventStatus } from "./event-status.enum";
+import { CategoryEntity } from "../categories/category.entity";
 
 @Entity({ name: "events" })
 export class EventEntity {
@@ -30,8 +33,12 @@ export class EventEntity {
   @Column({ type: "enum", enum: EventStatus, default: EventStatus.Scheduled })
   status: EventStatus;
 
-  @Column({ type: "varchar", length: 80, nullable: true })
-  category?: string | null;
+  @Column({ type: "int", nullable: true })
+  categoryId?: number | null;
+
+  @ManyToOne(() => CategoryEntity, { nullable: true, onDelete: "SET NULL" })
+  @JoinColumn({ name: "categoryId" })
+  category?: CategoryEntity | null;
 
   @CreateDateColumn({ type: "datetime" })
   createdAt: Date;

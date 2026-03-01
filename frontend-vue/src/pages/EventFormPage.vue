@@ -83,10 +83,14 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.category"
+              <v-select
+                v-model="form.categoryId"
+                :items="categoryItems"
+                item-title="title"
+                item-value="value"
                 label="Categoria (opcional)"
                 variant="outlined"
+                clearable
               />
             </v-col>
           </v-row>
@@ -107,6 +111,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "../services/eventsApi";
+import { categoriesApi } from "../services/categoriesApi";
 import { isoToLocalInput, localInputToIso } from "../utils/dateTime";
 
 const route = useRoute();
@@ -127,6 +132,12 @@ const statusItems = [
   { title: "Cancelado", value: "canceled" },
 ];
 
+const categories = ref([]);
+const categoryItems = computed(() => [
+  { title: "Sem categoria", value: null },
+  ...categories.value.map((c) => ({ title: c.name, value: c.id })),
+]);
+
 const form = ref({
   title: "",
   startDate: "",
@@ -134,7 +145,7 @@ const form = ref({
   location: "",
   organizerEmail: "",
   status: "scheduled",
-  category: "",
+  categoryId: null,
 });
 
 const rules = {
@@ -179,7 +190,7 @@ async function load() {
       location: data.location ?? "",
       organizerEmail: data.organizerEmail ?? "",
       status: data.status ?? "scheduled",
-      category: data.category ?? "",
+      categoryId: data.category?.id ?? data.categoryId ?? null,
     };
   } catch (e) {
     error.value = e?.message || "Erro ao carregar evento.";
@@ -201,7 +212,7 @@ async function submit() {
     location: form.value.location,
     organizerEmail: form.value.organizerEmail,
     status: form.value.status,
-    category: form.value.category || undefined,
+    categoryId: form.value.categoryId,
   };
 
   saving.value = true;
@@ -219,7 +230,15 @@ async function submit() {
 }
 
 onMounted(() => {
-  load();
+  (async () => {
+    try {
+      categories.value = await categoriesApi.list();
+    } catch {
+      categories.value = [];
+    }
+
+    load();
+  })();
 });
 </script>
 

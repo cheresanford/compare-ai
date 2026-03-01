@@ -23,6 +23,12 @@ export class ListEventsQueryDto {
   q?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoryId?: number;
+
+  @IsOptional()
   @IsIn(["startDate", "createdAt"])
   sortBy?: EventsSortBy;
 

@@ -3,9 +3,11 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   Length,
+  Min,
   ValidateIf,
 } from "class-validator";
 import { EventStatus } from "../event-status.enum";
@@ -46,7 +48,9 @@ export class UpdateEventDto {
   status?: EventStatus;
 
   @IsOptional()
-  @IsString()
-  @Length(1, 80)
-  category?: string;
+  @ValidateIf((_, value) => value !== null)
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoryId?: number | null;
 }

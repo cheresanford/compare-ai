@@ -11,9 +11,9 @@ function toQueryString(params) {
 }
 
 export const eventsApi = {
-  list: ({ page, size, q, sortBy, sortDir } = {}) =>
+  list: ({ page, size, q, sortBy, sortDir, categoryId } = {}) =>
     apiClient.get(
-      `/events${toQueryString({ page, size, q, sortBy, sortDir })}`,
+      `/events${toQueryString({ page, size, q, sortBy, sortDir, categoryId })}`,
     ),
   get: (id) => apiClient.get(`/events/${id}`),
   create: (dto) => apiClient.post("/events", dto),

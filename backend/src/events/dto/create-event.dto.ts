@@ -3,9 +3,12 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   Length,
+  Min,
+  ValidateIf,
 } from "class-validator";
 import { EventStatus } from "../event-status.enum";
 import { IsAfterDate } from "../validators/is-after-date.validator";
@@ -38,7 +41,10 @@ export class CreateEventDto {
   status?: EventStatus;
 
   @IsOptional()
-  @IsString()
-  @Length(1, 80)
-  category?: string;
+  // pode ser omitido; se vier null, significa "sem categoria"
+  @ValidateIf((_, value) => value !== null)
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoryId?: number | null;
 }

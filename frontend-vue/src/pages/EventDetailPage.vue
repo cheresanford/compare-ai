@@ -65,7 +65,7 @@
 
             <v-col cols="12" md="6">
               <div class="text-caption text-medium-emphasis">Categoria</div>
-              <div>{{ event?.category || "-" }}</div>
+              <div>{{ event?.category?.name || "-" }}</div>
             </v-col>
 
             <v-col cols="12" md="6">

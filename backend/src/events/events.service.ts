@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { CategoryEntity } from "../categories/category.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { ListEventsQueryDto } from "./dto/list-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
@@ -23,6 +24,8 @@ export class EventsService {
   constructor(
     @InjectRepository(EventEntity)
     private readonly eventsRepository: Repository<EventEntity>,
+    @InjectRepository(CategoryEntity)
+    private readonly categoriesRepository: Repository<CategoryEntity>,
   ) {}
 
   async list(query: ListEventsQueryDto): Promise<PaginatedResult<EventEntity>> {
@@ -35,10 +38,18 @@ export class EventsService {
     const sortDir =
       sortDirRaw.toString().toUpperCase() === "DESC" ? "DESC" : "ASC";
 
-    const qb = this.eventsRepository.createQueryBuilder("event");
+    const qb = this.eventsRepository
+      .createQueryBuilder("event")
+      .leftJoinAndSelect("event.category", "category");
 
     if (q.length > 0) {
       qb.andWhere("event.title LIKE :q", { q: `%${q}%` });
+    }
+
+    if (query.categoryId) {
+      qb.andWhere("event.categoryId = :categoryId", {
+        categoryId: query.categoryId,
+      });
     }
 
     qb.orderBy(`event.${sortBy}`, sortDir as "ASC" | "DESC");
@@ -50,7 +61,10 @@ export class EventsService {
   }
 
   async findOne(id: number): Promise<EventEntity> {
-    const event = await this.eventsRepository.findOne({ where: { id } });
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: { category: true },
+    });
     if (!event) {
       throw new NotFoundException("Event not found");
     }
@@ -60,6 +74,8 @@ export class EventsService {
   async create(dto: CreateEventDto): Promise<EventEntity> {
     this.assertDateRange(dto.startDate, dto.endDate);
 
+    const category = await this.resolveCategory(dto.categoryId);
+
     const event = this.eventsRepository.create({
       title: dto.title,
       startDate: dto.startDate,
@@ -67,7 +83,8 @@ export class EventsService {
       location: dto.location,
       organizerEmail: dto.organizerEmail,
       status: dto.status ?? EventStatus.Scheduled,
-      category: dto.category ?? null,
+      categoryId: category?.id ?? null,
+      category: category ?? null,
     });
 
     return this.eventsRepository.save(event);
@@ -80,10 +97,16 @@ export class EventsService {
     const endDate = dto.endDate ?? existing.endDate;
     this.assertDateRange(startDate, endDate);
 
+    const category =
+      dto.categoryId === undefined
+        ? undefined
+        : await this.resolveCategory(dto.categoryId);
+
     const merged = this.eventsRepository.merge(existing, {
       ...dto,
-      category:
-        dto.category === undefined ? existing.category : (dto.category ?? null),
+      ...(category === undefined
+        ? {}
+        : { categoryId: category?.id ?? null, category: category ?? null }),
     });
 
     return this.eventsRepository.save(merged);
@@ -110,5 +133,20 @@ export class EventsService {
         "endDate must be strictly greater than startDate",
       );
     }
+  }
+
+  private async resolveCategory(categoryId?: number | null) {
+    if (categoryId === undefined) return undefined;
+    if (categoryId === null) return null;
+
+    const category = await this.categoriesRepository.findOne({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new BadRequestException("categoryId is invalid");
+    }
+
+    return category;
   }
 }
