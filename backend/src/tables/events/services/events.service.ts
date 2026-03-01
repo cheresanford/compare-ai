@@ -36,6 +36,7 @@ export class EventsService {
       search: query.search?.trim() || undefined,
       sortBy: query.sortBy ?? "startDate",
       sortDir: (query.sortDir ?? "asc").toUpperCase() as "ASC" | "DESC",
+      categoryId: query.categoryId,
     });
   }
 
@@ -174,7 +175,7 @@ export class EventsService {
     return this.userRepository.save(user);
   }
 
-  private async resolveCategory(categoryId?: number) {
+  private async resolveCategory(categoryId?: number | null) {
     if (!categoryId) {
       return null;
     }

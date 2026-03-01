@@ -31,5 +31,11 @@ export class ListEventsQueryDto {
   @IsIn(SORT_DIRECTIONS)
   @IsOptional()
   sortDir?: "asc" | "desc" = "asc";
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  categoryId?: number;
 }
 

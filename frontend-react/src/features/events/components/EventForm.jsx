@@ -94,7 +94,7 @@ export function EventForm({
       organizerEmail: form.organizerEmail.trim(),
       organizerName: form.organizerName?.trim() || undefined,
       status: form.status,
-      categoryId: form.categoryId ? Number(form.categoryId) : undefined,
+      categoryId: form.categoryId ? Number(form.categoryId) : null,
     });
   };
 

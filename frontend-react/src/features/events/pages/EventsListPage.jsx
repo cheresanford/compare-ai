@@ -35,6 +35,7 @@ const DEFAULT_QUERY = {
   search: "",
   sortBy: "startDate",
   sortDir: "asc",
+  categoryId: "",
 };
 
 export function EventsListPage() {
@@ -42,6 +43,7 @@ export function EventsListPage() {
   const navigate = useNavigate();
 
   const [query, setQuery] = useState(DEFAULT_QUERY);
+  const [categories, setCategories] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -49,6 +51,10 @@ export function EventsListPage() {
   const [deleting, setDeleting] = useState(false);
 
   const canSearch = useMemo(() => query.search.trim().length > 0, [query.search]);
+  const canClearFilters = useMemo(
+    () => canSearch || Boolean(query.categoryId),
+    [canSearch, query.categoryId],
+  );
 
   const load = async (nextQuery = query) => {
     setLoading(true);
@@ -67,7 +73,20 @@ export function EventsListPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query.page, query.size, query.sortBy, query.sortDir]);
+  }, [query.page, query.size, query.sortBy, query.sortDir, query.categoryId]);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const options = await api.options();
+        setCategories(options?.categories || []);
+      } catch {
+        // Falha no carregamento das categorias não bloqueia a listagem de eventos.
+      }
+    };
+
+    loadCategories();
+  }, [api]);
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
@@ -76,7 +95,7 @@ export function EventsListPage() {
   };
 
   const handleClearSearch = () => {
-    const nextQuery = { ...query, search: "", page: 1 };
+    const nextQuery = { ...query, search: "", categoryId: "", page: 1 };
     setQuery(nextQuery);
     load(nextQuery);
   };
@@ -143,8 +162,31 @@ export function EventsListPage() {
             </Select>
           </FormControl>
 
+          <FormControl sx={{ minWidth: 220 }}>
+            <InputLabel id="category-filter-label">Categoria</InputLabel>
+            <Select
+              labelId="category-filter-label"
+              label="Categoria"
+              value={query.categoryId || ""}
+              onChange={(event) =>
+                setQuery((prev) => ({
+                  ...prev,
+                  categoryId: event.target.value,
+                  page: 1,
+                }))
+              }
+            >
+              <MenuItem value="">Todas</MenuItem>
+              {categories.map((category) => (
+                <MenuItem key={category.id} value={category.id}>
+                  {category.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
           <Button type="submit" variant="contained">Buscar</Button>
-          <Button type="button" variant="text" disabled={!canSearch} onClick={handleClearSearch}>
+          <Button type="button" variant="text" disabled={!canClearFilters} onClick={handleClearSearch}>
             Limpar
           </Button>
         </Stack>
@@ -159,6 +201,7 @@ export function EventsListPage() {
               <TableCell>Título</TableCell>
               <TableCell>Data início</TableCell>
               <TableCell>Data término</TableCell>
+              <TableCell>Categoria</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Organizador</TableCell>
               <TableCell align="right">Ações</TableCell>
@@ -167,7 +210,7 @@ export function EventsListPage() {
           <TableBody>
             {loading && (
               <TableRow>
-                <TableCell colSpan={6}>
+                <TableCell colSpan={7}>
                   <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
                     <CircularProgress size={24} />
                   </Box>
@@ -177,7 +220,7 @@ export function EventsListPage() {
 
             {!loading && data?.items?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6}>Nenhum evento encontrado.</TableCell>
+                <TableCell colSpan={7}>Nenhum evento encontrado.</TableCell>
               </TableRow>
             )}
 
@@ -187,6 +230,7 @@ export function EventsListPage() {
                   <TableCell>{event.title}</TableCell>
                   <TableCell>{toDisplayDateTime(event.startDate)}</TableCell>
                   <TableCell>{toDisplayDateTime(event.endDate)}</TableCell>
+                  <TableCell>{event.category?.name || "Sem categoria"}</TableCell>
                   <TableCell>{event.status?.name || "-"}</TableCell>
                   <TableCell>{event.user?.email || "-"}</TableCell>
                   <TableCell align="right">

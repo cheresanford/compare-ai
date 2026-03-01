@@ -13,7 +13,7 @@ export class TypeOrmEventRepository implements EventRepository {
   ) {}
 
   async list(params: ListEventsParams): Promise<PaginatedResult<Event>> {
-    const { page, size, search, sortBy, sortDir } = params;
+    const { page, size, search, sortBy, sortDir, categoryId } = params;
 
     const query = this.ormRepository
       .createQueryBuilder("event")
@@ -25,6 +25,14 @@ export class TypeOrmEventRepository implements EventRepository {
       query.where("LOWER(event.title) LIKE :search", {
         search: `%${search.toLowerCase()}%`,
       });
+    }
+
+    if (categoryId) {
+      if (search) {
+        query.andWhere("event.category_id = :categoryId", { categoryId });
+      } else {
+        query.where("event.category_id = :categoryId", { categoryId });
+      }
     }
 
     const [items, totalItems] = await query

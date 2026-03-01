@@ -13,6 +13,7 @@ import { EventsApiProvider } from "./features/events/providers/EventsApiProvider
 import { EventsListPage } from "./features/events/pages/EventsListPage";
 import { EventFormPage } from "./features/events/pages/EventFormPage";
 import { EventDetailPage } from "./features/events/pages/EventDetailPage";
+import { CategoriesPage } from "./features/categories/pages/CategoriesPage";
 
 function Shell({ children }) {
   return (
@@ -28,6 +29,9 @@ function Shell({ children }) {
           </Button>
           <Button color="inherit" component={RouterLink} to="/events">
             Eventos
+          </Button>
+          <Button color="inherit" component={RouterLink} to="/categories">
+            Categorias
           </Button>
           <Button color="inherit" component={RouterLink} to="/events/new">
             Criar Evento
@@ -55,6 +59,7 @@ export default function App() {
             <Route path="/events/new" element={<EventFormPage />} />
             <Route path="/events/:id" element={<EventDetailPage />} />
             <Route path="/events/:id/edit" element={<EventFormPage />} />
+            <Route path="/categories" element={<CategoriesPage />} />
             <Route path="*" element={<Navigate to="/events" replace />} />
           </Routes>
         </AnimatePresence>

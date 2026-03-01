@@ -6,7 +6,7 @@ export class Category {
   @PrimaryGeneratedColumn("increment")
   id: number;
 
-  @Column({ type: "varchar", length: 100, unique: true })
+  @Column({ type: "varchar", length: 60, unique: true })
   name: string;
 
   @OneToMany(() => Event, (event) => event.category)

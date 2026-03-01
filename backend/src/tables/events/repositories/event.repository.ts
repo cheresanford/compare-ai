@@ -7,6 +7,7 @@ export interface ListEventsParams {
   search?: string;
   sortBy: "startDate" | "createdAt";
   sortDir: "ASC" | "DESC";
+  categoryId?: number;
 }
 
 export interface EventRepository {

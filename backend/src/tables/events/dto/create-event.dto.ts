@@ -40,6 +40,6 @@ export class CreateEventDto {
   @Type(() => Number)
   @IsInt()
   @IsOptional()
-  categoryId?: number;
+  categoryId?: number | null;
 }
 
