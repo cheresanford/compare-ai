@@ -2,17 +2,17 @@
   <v-container class="py-8" style="max-width: 900px">
     <div class="d-flex align-center justify-space-between mb-4">
       <div>
-        <div class="text-h5">Detalhe do evento</div>
+        <div class="text-h5">Detalhes da Categoria</div>
         <div class="text-body-2 text-medium-emphasis">
           Visualização e exclusão.
         </div>
       </div>
       <div class="d-flex gap-2">
-        <v-btn variant="text" :to="{ name: 'events-list' }">Voltar</v-btn>
+        <v-btn variant="text" :to="{ name: 'categories-list' }">Voltar</v-btn>
         <v-btn
           color="primary"
           variant="tonal"
-          :to="{ name: 'events-edit', params: { id } }"
+          :to="{ name: 'categories-edit', params: { id } }"
         >
           Editar
         </v-btn>
@@ -35,37 +35,8 @@
 
           <v-row>
             <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Início</div>
-              <div>{{ formatDateTime(event?.startDate) }}</div>
-            </v-col>
-            <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Término</div>
-              <div>{{ formatDateTime(event?.endDate) }}</div>
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Local</div>
-              <div>{{ event?.location || "-" }}</div>
-            </v-col>
-            <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Organizador</div>
-              <div>{{ event?.organizerEmail || "-" }}</div>
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Status</div>
-              <v-chip
-                size="small"
-                :color="event?.status === 'canceled' ? 'error' : 'success'"
-                variant="tonal"
-              >
-                {{ event?.status === "canceled" ? "Cancelado" : "Agendado" }}
-              </v-chip>
-            </v-col>
-
-            <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Categoria</div>
-              <div>{{ event?.category.name || "-" }}</div>
+              <div class="text-caption text-medium-emphasis">Nome</div>
+              <div>{{ event?.name || "-" }}</div>
             </v-col>
 
             <v-col cols="12" md="6">
@@ -84,7 +55,9 @@
     <v-dialog v-model="deleteDialog" max-width="520">
       <v-card>
         <v-card-title>Confirmar exclusão</v-card-title>
-        <v-card-text> Tem certeza que deseja excluir este evento? </v-card-text>
+        <v-card-text>
+          Tem certeza que deseja excluir esta categoria?
+        </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="deleteDialog = false">Cancelar</v-btn>
@@ -100,7 +73,7 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { eventsApi } from "../services/eventsApi";
+import { categoriesApi } from "../services/categoriesApi";
 import { formatDateTime } from "../utils/dateTime";
 
 const route = useRoute();
@@ -119,7 +92,7 @@ async function load() {
   loading.value = true;
   error.value = "";
   try {
-    event.value = await eventsApi.get(id);
+    event.value = await categoriesApi.get(id);
   } catch (e) {
     error.value = e?.message || "Erro ao carregar evento.";
   } finally {
@@ -131,8 +104,8 @@ async function confirmDelete() {
   deleting.value = true;
   error.value = "";
   try {
-    await eventsApi.remove(id);
-    router.push({ name: "events-list" });
+    await categoriesApi.remove(id);
+    router.push({ name: "categories-list" });
   } catch (e) {
     error.value = e?.message || "Erro ao excluir evento.";
   } finally {

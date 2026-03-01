@@ -2,12 +2,14 @@
   <v-container class="py-8" style="max-width: 1100px">
     <div class="d-flex align-center justify-space-between mb-4">
       <div>
-        <div class="text-h5">Eventos</div>
+        <div class="text-h5">Categorias</div>
         <div class="text-body-2 text-medium-emphasis">
-          Busca por título, paginação e ordenação.
+          Busca e registras novas categorias.
         </div>
       </div>
-      <v-btn color="primary" :to="{ name: 'events-new' }">Novo evento</v-btn>
+      <v-btn color="primary" :to="{ name: 'categories-new' }"
+        >Nova categoria</v-btn
+      >
     </div>
 
     <v-card elevation="4">
@@ -20,54 +22,6 @@
             variant="outlined"
             density="comfortable"
             hide-details
-            style="min-width: 260px"
-          />
-
-          <v-col cols="3" md="3">
-            <v-select
-              :items="itemsMenu"
-              v-model="categoryIdFilter"
-              item-title="name"
-              item-value="id"
-              label="Selecione a Categoria"
-              variant="outlined"
-              density="comfortable"
-              hide-details
-            ></v-select>
-          </v-col>
-
-          <v-select
-            v-model="sortBy"
-            :items="sortByItems"
-            item-title="title"
-            item-value="value"
-            label="Ordenar por"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            style="min-width: 200px"
-          />
-
-          <v-select
-            v-model="sortDir"
-            :items="sortDirItems"
-            item-title="title"
-            item-value="value"
-            label="Direção"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            style="min-width: 160px"
-          />
-
-          <v-select
-            v-model="size"
-            :items="[5, 10, 20, 50]"
-            label="Tamanho da página"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            style="min-width: 170px"
           />
 
           <v-spacer />
@@ -83,49 +37,39 @@
           {{ error }}
         </v-alert>
 
-        <v-table density="comfortable">
+        <v-table>
           <thead>
             <tr>
-              <th>Título</th>
-              <th>Início</th>
-              <th>Término</th>
-              <th>Status</th>
-              <th>Organizador</th>
+              <th>Id</th>
+              <th>Nome</th>
               <th class="text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="!loading && items.length === 0">
-              <td colspan="6" class="text-medium-emphasis">
+              <td colspan="3" class="text-medium-emphasis">
                 Nenhum evento encontrado.
               </td>
             </tr>
-            <tr v-for="ev in items" :key="ev.id">
-              <td class="font-weight-medium">{{ ev.title }}</td>
-              <td>{{ formatDateTime(ev.startDate) }}</td>
-              <td>{{ formatDateTime(ev.endDate) }}</td>
+            <tr v-for="category in items" :key="category.id">
+              asdas
+              <td class="font-weight-medium">{{ category.id }}</td>
+              <td class="font-weight-medium">{{ category.name }}</td>
               <td>
-                <v-chip
-                  size="small"
-                  :color="ev.status === 'canceled' ? 'error' : 'success'"
-                  variant="tonal"
-                >
-                  {{ ev.status === "canceled" ? "Cancelado" : "Agendado" }}
-                </v-chip>
-              </td>
-              <td>{{ ev.organizerEmail }}</td>
-              <td class="text-right">
                 <v-btn
                   size="small"
                   variant="text"
-                  :to="{ name: 'events-detail', params: { id: ev.id } }"
+                  :to="{
+                    name: 'categories-detail',
+                    params: { id: category.id },
+                  }"
                 >
                   Ver
                 </v-btn>
                 <v-btn
                   size="small"
                   variant="text"
-                  :to="{ name: 'events-edit', params: { id: ev.id } }"
+                  :to="{ name: 'categories-edit', params: { id: category.id } }"
                 >
                   Editar
                 </v-btn>
@@ -180,21 +124,18 @@
 
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
-import { eventsApi } from "../services/eventsApi";
-import { formatDateTime } from "../utils/dateTime";
 import { categoriesApi } from "../services/categoriesApi";
+import { formatDateTime } from "../utils/dateTime";
 
 const loading = ref(false);
 const error = ref("");
 
 const items = ref([]);
-const itemsMenu = ref([]);
 const total = ref(0);
 
 const page = ref(1);
 const size = ref(10);
 const q = ref("");
-const categoryIdFilter = ref(null);
 
 const sortBy = ref("startDate");
 const sortDir = ref("ASC");
@@ -223,7 +164,7 @@ watch(q, () => {
   }, 300);
 });
 
-watch([page, size, sortBy, sortDir, categoryIdFilter], () => {
+watch([page, size, sortBy, sortDir], () => {
   refresh();
 });
 
@@ -231,25 +172,9 @@ async function refresh() {
   loading.value = true;
   error.value = "";
   try {
-    const data = await eventsApi.list({
-      page: page.value,
-      size: size.value,
-      q: q.value,
-      sortBy: sortBy.value,
-      sortDir: sortDir.value,
-      categoryIdFilter: categoryIdFilter.value,
-    });
+    const data = await categoriesApi.listAll();
 
-    const categorias = await categoriesApi.listAll();
-    itemsMenu.value = categorias;
-
-    items.value = data.items;
-    total.value = data.total;
-
-    // Se o usuário reduziu size e a página atual ficou inválida.
-    if (page.value > pageCount.value) {
-      page.value = pageCount.value;
-    }
+    items.value = data;
   } catch (e) {
     error.value = e?.message || "Erro ao carregar eventos.";
   } finally {
@@ -270,7 +195,7 @@ async function confirmDelete() {
   if (!deleting.value) return;
   deletingLoading.value = true;
   try {
-    await eventsApi.remove(deleting.value.id);
+    await categoriesApi.remove(deleting.value.id);
     deleteDialog.value = false;
     deleting.value = null;
     refresh();

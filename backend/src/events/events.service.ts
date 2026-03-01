@@ -29,6 +29,7 @@ export class EventsService {
     const page = query.page ?? 1;
     const size = query.size ?? 10;
     const q = (query.q ?? "").trim();
+    const categoryIdFilter = query.categoryIdFilter ?? null;
 
     const sortBy = query.sortBy ?? "startDate";
     const sortDirRaw = query.sortDir ?? "ASC";
@@ -39,6 +40,10 @@ export class EventsService {
 
     if (q.length > 0) {
       qb.andWhere("event.title LIKE :q", { q: `%${q}%` });
+    }
+
+    if (categoryIdFilter) {
+      qb.andWhere("event.categoryId = " + categoryIdFilter);
     }
 
     qb.orderBy(`event.${sortBy}`, sortDir as "ASC" | "DESC");
@@ -67,7 +72,7 @@ export class EventsService {
       location: dto.location,
       organizerEmail: dto.organizerEmail,
       status: dto.status ?? EventStatus.Scheduled,
-      category: dto.category ?? null,
+      category: dto.categoryId,
     });
 
     return this.eventsRepository.save(event);

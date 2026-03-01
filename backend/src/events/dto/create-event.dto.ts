@@ -3,6 +3,7 @@ import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
   Length,
@@ -37,8 +38,6 @@ export class CreateEventDto {
   @IsEnum(EventStatus)
   status?: EventStatus;
 
-  @IsOptional()
-  @IsString()
-  @Length(1, 80)
-  category?: string;
+  @IsNumber()
+  categoryId: string;
 }

@@ -19,6 +19,12 @@ export class ListEventsQueryDto {
   size?: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  categoryIdFilter?: number;
+
+  @IsOptional()
   @IsString()
   q?: string;
 

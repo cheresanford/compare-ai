@@ -83,11 +83,13 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.category"
-                label="Categoria (opcional)"
-                variant="outlined"
-              />
+              <v-select
+                :items="itemsMenu"
+                v-model="form.categoryId"
+                item-title="name"
+                item-value="id"
+                label="Selecione a Categoria"
+              ></v-select>
             </v-col>
           </v-row>
 
@@ -108,6 +110,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "../services/eventsApi";
 import { isoToLocalInput, localInputToIso } from "../utils/dateTime";
+import { categoriesApi } from "../services/categoriesApi";
 
 const route = useRoute();
 const router = useRouter();
@@ -127,6 +130,8 @@ const statusItems = [
   { title: "Cancelado", value: "canceled" },
 ];
 
+const itemsMenu = ref([]);
+
 const form = ref({
   title: "",
   startDate: "",
@@ -134,7 +139,7 @@ const form = ref({
   location: "",
   organizerEmail: "",
   status: "scheduled",
-  category: "",
+  categoryId: "",
 });
 
 const rules = {
@@ -167,6 +172,9 @@ const rules = {
 };
 
 async function load() {
+  const data = await categoriesApi.listAll();
+  console.log("data: ", data);
+  itemsMenu.value = data;
   if (!isEdit.value) return;
   loading.value = true;
   error.value = "";
@@ -179,7 +187,7 @@ async function load() {
       location: data.location ?? "",
       organizerEmail: data.organizerEmail ?? "",
       status: data.status ?? "scheduled",
-      category: data.category ?? "",
+      categoryId: data.category.id ?? "",
     };
   } catch (e) {
     error.value = e?.message || "Erro ao carregar evento.";
@@ -201,7 +209,7 @@ async function submit() {
     location: form.value.location,
     organizerEmail: form.value.organizerEmail,
     status: form.value.status,
-    category: form.value.category || undefined,
+    categoryId: Number(form.value.categoryId) || undefined,
   };
 
   saving.value = true;
