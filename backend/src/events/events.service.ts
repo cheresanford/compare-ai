@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -73,6 +74,11 @@ export class EventsService {
 
   async create(dto: CreateEventDto): Promise<EventEntity> {
     this.assertDateRange(dto.startDate, dto.endDate);
+    await this.assertNoOrganizerScheduleConflict(
+      dto.organizerEmail,
+      dto.startDate,
+      dto.endDate,
+    );
 
     const category = await this.resolveCategory(dto.categoryId);
 
@@ -95,7 +101,14 @@ export class EventsService {
 
     const startDate = dto.startDate ?? existing.startDate;
     const endDate = dto.endDate ?? existing.endDate;
+    const organizerEmail = dto.organizerEmail ?? existing.organizerEmail;
     this.assertDateRange(startDate, endDate);
+    await this.assertNoOrganizerScheduleConflict(
+      organizerEmail,
+      startDate,
+      endDate,
+      id,
+    );
 
     const category =
       dto.categoryId === undefined
@@ -131,6 +144,33 @@ export class EventsService {
     if (endDate.getTime() <= startDate.getTime()) {
       throw new BadRequestException(
         "endDate must be strictly greater than startDate",
+      );
+    }
+  }
+
+  private async assertNoOrganizerScheduleConflict(
+    organizerEmail: string,
+    startDate: Date,
+    endDate: Date,
+    excludeEventId?: number,
+  ) {
+    const qb = this.eventsRepository
+      .createQueryBuilder("event")
+      .where("LOWER(event.organizerEmail) = LOWER(:organizerEmail)", {
+        organizerEmail,
+      })
+      .andWhere("event.startDate < :endDate", { endDate })
+      .andWhere("event.endDate > :startDate", { startDate });
+
+    if (excludeEventId) {
+      qb.andWhere("event.id != :excludeEventId", { excludeEventId });
+    }
+
+    const hasConflict = (await qb.getCount()) > 0;
+
+    if (hasConflict) {
+      throw new ConflictException(
+        "Horario ja ocupado para este organizador no intervalo informado",
       );
     }
   }
