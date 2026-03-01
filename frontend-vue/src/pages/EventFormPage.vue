@@ -223,6 +223,11 @@ async function submit() {
 
     router.push({ name: "events-detail", params: { id: saved.id } });
   } catch (e) {
+    if (e?.status === 409) {
+      error.value = "Horário já está ocupado para este organizador.";
+      return;
+    }
+
     error.value = e?.message || "Erro ao salvar evento.";
   } finally {
     saving.value = false;

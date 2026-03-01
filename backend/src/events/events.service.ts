@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -73,6 +74,11 @@ export class EventsService {
 
   async create(dto: CreateEventDto): Promise<EventEntity> {
     this.assertDateRange(dto.startDate, dto.endDate);
+    await this.assertNoScheduleConflict({
+      organizerEmail: dto.organizerEmail,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+    });
 
     const category = await this.resolveCategory(dto.categoryId);
 
@@ -95,7 +101,14 @@ export class EventsService {
 
     const startDate = dto.startDate ?? existing.startDate;
     const endDate = dto.endDate ?? existing.endDate;
+    const organizerEmail = dto.organizerEmail ?? existing.organizerEmail;
     this.assertDateRange(startDate, endDate);
+    await this.assertNoScheduleConflict({
+      organizerEmail,
+      startDate,
+      endDate,
+      excludeEventId: id,
+    });
 
     const category =
       dto.categoryId === undefined
@@ -148,5 +161,36 @@ export class EventsService {
     }
 
     return category;
+  }
+
+  private async assertNoScheduleConflict(params: {
+    organizerEmail: string;
+    startDate: Date;
+    endDate: Date;
+    excludeEventId?: number;
+  }) {
+    const organizerEmail = params.organizerEmail.trim().toLowerCase();
+
+    const qb = this.eventsRepository
+      .createQueryBuilder("event")
+      .where("LOWER(event.organizerEmail) = :organizerEmail", {
+        organizerEmail,
+      })
+      .andWhere("event.startDate < :endDate", { endDate: params.endDate })
+      .andWhere("event.endDate > :startDate", { startDate: params.startDate });
+
+    if (params.excludeEventId) {
+      qb.andWhere("event.id != :excludeEventId", {
+        excludeEventId: params.excludeEventId,
+      });
+    }
+
+    const conflict = await qb.getOne();
+
+    if (conflict) {
+      throw new ConflictException(
+        "Horário já está ocupado para este organizador.",
+      );
+    }
   }
 }
