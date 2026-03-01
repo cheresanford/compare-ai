@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       useFactory: (config: ConfigService) => {
         const portRaw = config.get<string>('DB_PORT') ?? '3306';
         const port = Number.parseInt(portRaw, 10);
+        const syncFlag = config.get<string>('DB_SYNC') ?? 'true';
 
         return {
           type: 'mysql' as const,
@@ -19,7 +20,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           password: config.get<string>('DB_PASS') ?? '',
           database: config.get<string>('DB_NAME') ?? 'tcc',
           autoLoadEntities: true,
-          synchronize: false,
+          synchronize: syncFlag === 'true',
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
           retryAttempts: 10,
           retryDelay: 2000,
