@@ -4,7 +4,7 @@
       <div>
         <div class="text-h5">Detalhe do evento</div>
         <div class="text-body-2 text-medium-emphasis">
-          Visualização e exclusão.
+          Visualizacao e exclusao.
         </div>
       </div>
       <div class="d-flex gap-2">
@@ -35,11 +35,11 @@
 
           <v-row>
             <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Início</div>
+              <div class="text-caption text-medium-emphasis">Inicio</div>
               <div>{{ formatDateTime(event?.startDate) }}</div>
             </v-col>
             <v-col cols="12" md="6">
-              <div class="text-caption text-medium-emphasis">Término</div>
+              <div class="text-caption text-medium-emphasis">Termino</div>
               <div>{{ formatDateTime(event?.endDate) }}</div>
             </v-col>
 
@@ -65,7 +65,7 @@
 
             <v-col cols="12" md="6">
               <div class="text-caption text-medium-emphasis">Categoria</div>
-              <div>{{ event?.category || "-" }}</div>
+              <div>{{ event?.category?.name || "-" }}</div>
             </v-col>
 
             <v-col cols="12" md="6">
@@ -83,7 +83,7 @@
 
     <v-dialog v-model="deleteDialog" max-width="520">
       <v-card>
-        <v-card-title>Confirmar exclusão</v-card-title>
+        <v-card-title>Confirmar exclusao</v-card-title>
         <v-card-text> Tem certeza que deseja excluir este evento? </v-card-text>
         <v-card-actions>
           <v-spacer />

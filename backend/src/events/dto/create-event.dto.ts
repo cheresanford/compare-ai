@@ -1,11 +1,13 @@
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   IsDate,
   IsEmail,
   IsEnum,
+  IsInt,
   IsOptional,
   IsString,
   Length,
+  Min,
 } from "class-validator";
 import { EventStatus } from "../event-status.enum";
 import { IsAfterDate } from "../validators/is-after-date.validator";
@@ -38,7 +40,12 @@ export class CreateEventDto {
   status?: EventStatus;
 
   @IsOptional()
-  @IsString()
-  @Length(1, 80)
-  category?: string;
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === ""
+      ? undefined
+      : Number(value),
+  )
+  @IsInt()
+  @Min(1)
+  categoryId?: number;
 }

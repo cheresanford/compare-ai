@@ -4,6 +4,7 @@ import AboutPage from "../pages/AboutPage.vue";
 import EventsListPage from "../pages/EventsListPage.vue";
 import EventFormPage from "../pages/EventFormPage.vue";
 import EventDetailPage from "../pages/EventDetailPage.vue";
+import CategoriesPage from "../pages/CategoriesPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,6 +33,11 @@ const router = createRouter({
       path: "/eventos/:id/editar",
       name: "events-edit",
       component: EventFormPage,
+    },
+    {
+      path: "/categorias",
+      name: "categories-list",
+      component: CategoriesPage,
     },
     {
       path: "/sobre",

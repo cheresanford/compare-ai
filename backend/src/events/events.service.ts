@@ -10,6 +10,7 @@ import { ListEventsQueryDto } from "./dto/list-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventEntity } from "./event.entity";
 import { EventStatus } from "./event-status.enum";
+import { CategoryEntity } from "../categories/category.entity";
 
 export type PaginatedResult<T> = {
   items: T[];
@@ -23,22 +24,31 @@ export class EventsService {
   constructor(
     @InjectRepository(EventEntity)
     private readonly eventsRepository: Repository<EventEntity>,
+    @InjectRepository(CategoryEntity)
+    private readonly categoriesRepository: Repository<CategoryEntity>,
   ) {}
 
   async list(query: ListEventsQueryDto): Promise<PaginatedResult<EventEntity>> {
     const page = query.page ?? 1;
     const size = query.size ?? 10;
     const q = (query.q ?? "").trim();
+    const categoryId = query.categoryId;
 
     const sortBy = query.sortBy ?? "startDate";
     const sortDirRaw = query.sortDir ?? "ASC";
     const sortDir =
       sortDirRaw.toString().toUpperCase() === "DESC" ? "DESC" : "ASC";
 
-    const qb = this.eventsRepository.createQueryBuilder("event");
+    const qb = this.eventsRepository
+      .createQueryBuilder("event")
+      .leftJoinAndSelect("event.category", "category");
 
     if (q.length > 0) {
       qb.andWhere("event.title LIKE :q", { q: `%${q}%` });
+    }
+
+    if (categoryId) {
+      qb.andWhere("event.categoryId = :categoryId", { categoryId });
     }
 
     qb.orderBy(`event.${sortBy}`, sortDir as "ASC" | "DESC");
@@ -50,7 +60,10 @@ export class EventsService {
   }
 
   async findOne(id: number): Promise<EventEntity> {
-    const event = await this.eventsRepository.findOne({ where: { id } });
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: { category: true },
+    });
     if (!event) {
       throw new NotFoundException("Event not found");
     }
@@ -59,6 +72,7 @@ export class EventsService {
 
   async create(dto: CreateEventDto): Promise<EventEntity> {
     this.assertDateRange(dto.startDate, dto.endDate);
+    const category = await this.resolveCategory(dto.categoryId);
 
     const event = this.eventsRepository.create({
       title: dto.title,
@@ -67,10 +81,11 @@ export class EventsService {
       location: dto.location,
       organizerEmail: dto.organizerEmail,
       status: dto.status ?? EventStatus.Scheduled,
-      category: dto.category ?? null,
+      category,
     });
 
-    return this.eventsRepository.save(event);
+    const saved = await this.eventsRepository.save(event);
+    return this.findOne(saved.id);
   }
 
   async update(id: number, dto: UpdateEventDto): Promise<EventEntity> {
@@ -80,13 +95,19 @@ export class EventsService {
     const endDate = dto.endDate ?? existing.endDate;
     this.assertDateRange(startDate, endDate);
 
+    let category = existing.category ?? null;
+    if (Object.prototype.hasOwnProperty.call(dto, "categoryId")) {
+      category = await this.resolveCategory(dto.categoryId ?? null);
+    }
+
+    const { categoryId: _, ...rest } = dto;
     const merged = this.eventsRepository.merge(existing, {
-      ...dto,
-      category:
-        dto.category === undefined ? existing.category : (dto.category ?? null),
+      ...rest,
+      category,
     });
 
-    return this.eventsRepository.save(merged);
+    const saved = await this.eventsRepository.save(merged);
+    return this.findOne(saved.id);
   }
 
   async remove(
@@ -110,5 +131,21 @@ export class EventsService {
         "endDate must be strictly greater than startDate",
       );
     }
+  }
+
+  private async resolveCategory(categoryId?: number | null) {
+    if (categoryId === undefined || categoryId === null) {
+      return null;
+    }
+
+    const category = await this.categoriesRepository.findOne({
+      where: { id: categoryId },
+    });
+
+    if (!category) {
+      throw new BadRequestException("Category not found");
+    }
+
+    return category;
   }
 }

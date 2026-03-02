@@ -23,7 +23,7 @@
             <v-col cols="12" md="8">
               <v-text-field
                 v-model="form.title"
-                label="Título"
+                label="Titulo"
                 variant="outlined"
                 :rules="rules.title"
                 required
@@ -44,7 +44,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="form.startDate"
-                label="Data de início"
+                label="Data de inicio"
                 type="datetime-local"
                 variant="outlined"
                 :rules="rules.startDate"
@@ -54,7 +54,7 @@
             <v-col cols="12" md="6">
               <v-text-field
                 v-model="form.endDate"
-                label="Data de término"
+                label="Data de termino"
                 type="datetime-local"
                 variant="outlined"
                 :rules="rules.endDate"
@@ -83,10 +83,14 @@
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field
-                v-model="form.category"
+              <v-select
+                v-model="form.categoryId"
                 label="Categoria (opcional)"
                 variant="outlined"
+                :items="categoryItems"
+                item-title="title"
+                item-value="value"
+                clearable
               />
             </v-col>
           </v-row>
@@ -107,6 +111,7 @@
 import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { eventsApi } from "../services/eventsApi";
+import { categoriesApi } from "../services/categoriesApi";
 import { isoToLocalInput, localInputToIso } from "../utils/dateTime";
 
 const route = useRoute();
@@ -127,6 +132,12 @@ const statusItems = [
   { title: "Cancelado", value: "canceled" },
 ];
 
+const categories = ref([]);
+const categoryItems = computed(() => [
+  { title: "Sem categoria", value: null },
+  ...categories.value.map((cat) => ({ title: cat.name, value: cat.id })),
+]);
+
 const form = ref({
   title: "",
   startDate: "",
@@ -134,33 +145,33 @@ const form = ref({
   location: "",
   organizerEmail: "",
   status: "scheduled",
-  category: "",
+  categoryId: null,
 });
 
 const rules = {
   title: [
-    (v) => !!v || "Título é obrigatório.",
-    (v) => v?.length >= 3 || "Mínimo de 3 caracteres.",
-    (v) => v?.length <= 100 || "Máximo de 100 caracteres.",
+    (v) => !!v || "Titulo e obrigatorio.",
+    (v) => v?.length >= 3 || "Minimo de 3 caracteres.",
+    (v) => v?.length <= 100 || "Maximo de 100 caracteres.",
   ],
   organizerEmail: [
-    (v) => !!v || "E-mail é obrigatório.",
-    (v) => /.+@.+\..+/.test(v) || "E-mail inválido.",
+    (v) => !!v || "E-mail e obrigatorio.",
+    (v) => /.+@.+\..+/.test(v) || "E-mail invalido.",
   ],
   location: [
-    (v) => !!v || "Local é obrigatório.",
-    (v) => v?.length <= 255 || "Máximo de 255 caracteres.",
+    (v) => !!v || "Local e obrigatorio.",
+    (v) => v?.length <= 255 || "Maximo de 255 caracteres.",
   ],
-  startDate: [(v) => !!v || "Data de início é obrigatória."],
+  startDate: [(v) => !!v || "Data de inicio e obrigatoria."],
   endDate: [
-    (v) => !!v || "Data de término é obrigatória.",
+    (v) => !!v || "Data de termino e obrigatoria.",
     () => {
       const startIso = localInputToIso(form.value.startDate);
       const endIso = localInputToIso(form.value.endDate);
       if (!startIso || !endIso) return true;
       return (
         new Date(endIso).getTime() > new Date(startIso).getTime() ||
-        "Término deve ser maior que início."
+        "Termino deve ser maior que inicio."
       );
     },
   ],
@@ -179,7 +190,7 @@ async function load() {
       location: data.location ?? "",
       organizerEmail: data.organizerEmail ?? "",
       status: data.status ?? "scheduled",
-      category: data.category ?? "",
+      categoryId: data.category?.id ?? null,
     };
   } catch (e) {
     error.value = e?.message || "Erro ao carregar evento.";
@@ -201,7 +212,7 @@ async function submit() {
     location: form.value.location,
     organizerEmail: form.value.organizerEmail,
     status: form.value.status,
-    category: form.value.category || undefined,
+    categoryId: form.value.categoryId ?? null,
   };
 
   saving.value = true;
@@ -218,8 +229,17 @@ async function submit() {
   }
 }
 
+async function loadCategories() {
+  try {
+    categories.value = await categoriesApi.list();
+  } catch (e) {
+    // ignore
+  }
+}
+
 onMounted(() => {
   load();
+  loadCategories();
 });
 </script>
 

@@ -4,7 +4,7 @@
       <div>
         <div class="text-h5">Eventos</div>
         <div class="text-body-2 text-medium-emphasis">
-          Busca por título, paginação e ordenação.
+          Busca por titulo, paginacao e ordenacao.
         </div>
       </div>
       <v-btn color="primary" :to="{ name: 'events-new' }">Novo evento</v-btn>
@@ -15,7 +15,7 @@
         <div class="d-flex flex-wrap gap-3 align-center">
           <v-text-field
             v-model="q"
-            label="Buscar por título"
+            label="Buscar por titulo"
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
             density="comfortable"
@@ -40,7 +40,7 @@
             :items="sortDirItems"
             item-title="title"
             item-value="value"
-            label="Direção"
+            label="Direcao"
             variant="outlined"
             density="comfortable"
             hide-details
@@ -48,9 +48,22 @@
           />
 
           <v-select
+            v-model="categoryId"
+            :items="categoryItems"
+            item-title="title"
+            item-value="value"
+            label="Categoria"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            style="min-width: 200px"
+            clearable
+          />
+
+          <v-select
             v-model="size"
             :items="[5, 10, 20, 50]"
-            label="Tamanho da página"
+            label="Tamanho da pagina"
             variant="outlined"
             density="comfortable"
             hide-details
@@ -73,17 +86,18 @@
         <v-table density="comfortable">
           <thead>
             <tr>
-              <th>Título</th>
-              <th>Início</th>
-              <th>Término</th>
+              <th>Titulo</th>
+              <th>Inicio</th>
+              <th>Termino</th>
               <th>Status</th>
               <th>Organizador</th>
-              <th class="text-right">Ações</th>
+              <th>Categoria</th>
+              <th class="text-right">Acoes</th>
             </tr>
           </thead>
           <tbody>
             <tr v-if="!loading && items.length === 0">
-              <td colspan="6" class="text-medium-emphasis">
+              <td colspan="7" class="text-medium-emphasis">
                 Nenhum evento encontrado.
               </td>
             </tr>
@@ -101,6 +115,7 @@
                 </v-chip>
               </td>
               <td>{{ ev.organizerEmail }}</td>
+              <td>{{ ev.category?.name || "-" }}</td>
               <td class="text-right">
                 <v-btn
                   size="small"
@@ -143,7 +158,7 @@
 
     <v-dialog v-model="deleteDialog" max-width="520">
       <v-card>
-        <v-card-title>Confirmar exclusão</v-card-title>
+        <v-card-title>Confirmar exclusao</v-card-title>
         <v-card-text>
           Tem certeza que deseja excluir o evento
           <strong>{{ deleting?.title }}</strong
@@ -168,6 +183,7 @@
 <script setup>
 import { computed, onMounted, ref, watch } from "vue";
 import { eventsApi } from "../services/eventsApi";
+import { categoriesApi } from "../services/categoriesApi";
 import { formatDateTime } from "../utils/dateTime";
 
 const loading = ref(false);
@@ -179,13 +195,14 @@ const total = ref(0);
 const page = ref(1);
 const size = ref(10);
 const q = ref("");
+const categoryId = ref(null);
 
 const sortBy = ref("startDate");
 const sortDir = ref("ASC");
 
 const sortByItems = [
-  { title: "Data de início", value: "startDate" },
-  { title: "Data de criação", value: "createdAt" },
+  { title: "Data de inicio", value: "startDate" },
+  { title: "Data de criacao", value: "createdAt" },
 ];
 
 const sortDirItems = [
@@ -193,13 +210,19 @@ const sortDirItems = [
   { title: "Decrescente (DESC)", value: "DESC" },
 ];
 
+const categories = ref([]);
+const categoryItems = computed(() => [
+  { title: "Todas", value: null },
+  ...categories.value.map((cat) => ({ title: cat.name, value: cat.id })),
+]);
+
 const pageCount = computed(() =>
   Math.max(1, Math.ceil(total.value / size.value)),
 );
 
 let qTimer = null;
 watch(q, () => {
-  // Debounce simples para não bater na API a cada tecla.
+  // Debounce simples para nao bater na API a cada tecla.
   if (qTimer) clearTimeout(qTimer);
   qTimer = setTimeout(() => {
     page.value = 1;
@@ -211,6 +234,11 @@ watch([page, size, sortBy, sortDir], () => {
   refresh();
 });
 
+watch(categoryId, () => {
+  page.value = 1;
+  refresh();
+});
+
 async function refresh() {
   loading.value = true;
   error.value = "";
@@ -219,6 +247,7 @@ async function refresh() {
       page: page.value,
       size: size.value,
       q: q.value,
+      categoryId: categoryId.value,
       sortBy: sortBy.value,
       sortDir: sortDir.value,
     });
@@ -226,7 +255,7 @@ async function refresh() {
     items.value = data.items;
     total.value = data.total;
 
-    // Se o usuário reduziu size e a página atual ficou inválida.
+    // Se o usuario reduziu size e a pagina atual ficou invalida.
     if (page.value > pageCount.value) {
       page.value = pageCount.value;
     }
@@ -261,8 +290,17 @@ async function confirmDelete() {
   }
 }
 
+async function loadCategories() {
+  try {
+    categories.value = await categoriesApi.list();
+  } catch (e) {
+    // ignore; events list should still work
+  }
+}
+
 onMounted(() => {
   refresh();
+  loadCategories();
 });
 </script>
 
