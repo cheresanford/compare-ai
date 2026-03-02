@@ -40,4 +40,10 @@ export interface EventsCommandRepository {
   categoryExists(categoryId: number): Promise<boolean>;
   statusExists(status: string): Promise<boolean>;
   statusExistsById(statusId: number): Promise<boolean>;
+  hasTimeConflict(
+    organizerEmail: string,
+    startDate: Date,
+    endDate: Date,
+    excludeEventId?: number,
+  ): Promise<boolean>;
 }

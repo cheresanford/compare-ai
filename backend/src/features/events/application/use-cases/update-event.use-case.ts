@@ -22,7 +22,7 @@ export class UpdateEventUseCase {
     const currentEvent = await this.eventsCommandRepository.findById(eventId);
 
     if (!currentEvent) {
-      throw new NotFoundException("Evento não encontrado.");
+      throw new NotFoundException("Evento nao encontrado.");
     }
 
     const nextStartDate = dto.startDate ?? currentEvent.startDate;
@@ -38,7 +38,7 @@ export class UpdateEventUseCase {
       await this.eventsCommandRepository.statusExistsById(nextStatusId);
 
     if (!statusExistsById) {
-      throw new BadRequestException("Status de evento inválido.");
+      throw new BadRequestException("Status de evento invalido.");
     }
 
     if (nextStatus) {
@@ -46,7 +46,7 @@ export class UpdateEventUseCase {
         await this.eventsCommandRepository.statusExists(nextStatus);
 
       if (!statusExists) {
-        throw new BadRequestException("Status de evento inválido.");
+        throw new BadRequestException("Status de evento invalido.");
       }
     }
 
@@ -59,8 +59,24 @@ export class UpdateEventUseCase {
         await this.eventsCommandRepository.categoryExists(nextCategoryId);
 
       if (!categoryExists) {
-        throw new BadRequestException("Categoria informada não existe.");
+        throw new BadRequestException("Categoria informada nao existe.");
       }
+    }
+
+    const nextOrganizerEmail =
+      dto.organizerEmail?.trim().toLowerCase() ?? currentEvent.organizer.email;
+
+    const hasConflict = await this.eventsCommandRepository.hasTimeConflict(
+      nextOrganizerEmail,
+      nextStartDate,
+      nextEndDate,
+      eventId,
+    );
+
+    if (hasConflict) {
+      throw new BadRequestException(
+        "Horario em conflito para este organizador.",
+      );
     }
 
     const payload: SaveEventPayload = {
@@ -69,9 +85,7 @@ export class UpdateEventUseCase {
       endDate: nextEndDate,
       location: dto.location?.trim() ?? currentEvent.location,
       organizerName: dto.organizerName?.trim() ?? currentEvent.organizer.name,
-      organizerEmail:
-        dto.organizerEmail?.trim().toLowerCase() ??
-        currentEvent.organizer.email,
+      organizerEmail: nextOrganizerEmail,
       statusId: nextStatusId,
       status: nextStatus,
       categoryId: nextCategoryId,
@@ -83,7 +97,7 @@ export class UpdateEventUseCase {
   private validateDates(startDate: Date, endDate: Date) {
     if (endDate.getTime() <= startDate.getTime()) {
       throw new BadRequestException(
-        "A data de término deve ser maior que a data de início.",
+        "A data de termino deve ser maior que a data de inicio.",
       );
     }
   }

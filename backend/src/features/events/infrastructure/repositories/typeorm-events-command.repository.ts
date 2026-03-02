@@ -136,6 +136,27 @@ export class TypeormEventsCommandRepository implements EventsCommandRepository {
     return count > 0;
   }
 
+  async hasTimeConflict(
+    organizerEmail: string,
+    startDate: Date,
+    endDate: Date,
+    excludeEventId?: number,
+  ): Promise<boolean> {
+    const qb = this.eventRepository
+      .createQueryBuilder("event")
+      .innerJoin("event.user", "user")
+      .where("LOWER(user.email) = LOWER(:email)", { email: organizerEmail })
+      .andWhere("event.startDate < :endDate", { endDate })
+      .andWhere("event.endDate > :startDate", { startDate });
+
+    if (excludeEventId) {
+      qb.andWhere("event.id <> :excludeId", { excludeId: excludeEventId });
+    }
+
+    const count = await qb.getCount();
+    return count > 0;
+  }
+
   private async findOrCreateOrganizer(
     name: string,
     email: string,

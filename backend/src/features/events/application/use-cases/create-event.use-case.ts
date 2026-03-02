@@ -20,13 +20,14 @@ export class CreateEventUseCase {
     }
 
     const normalizedStatus = dto.status?.trim().toLowerCase();
+    const normalizedEmail = dto.organizerEmail.trim().toLowerCase();
 
     if (dto.statusId) {
       const statusExistsById =
         await this.eventsCommandRepository.statusExistsById(dto.statusId);
 
       if (!statusExistsById) {
-        throw new BadRequestException("Status de evento inválido.");
+        throw new BadRequestException("Status de evento invalido.");
       }
     }
 
@@ -35,7 +36,7 @@ export class CreateEventUseCase {
         await this.eventsCommandRepository.statusExists(normalizedStatus);
 
       if (!statusExists) {
-        throw new BadRequestException("Status de evento inválido.");
+        throw new BadRequestException("Status de evento invalido.");
       }
     }
 
@@ -45,8 +46,20 @@ export class CreateEventUseCase {
       );
 
       if (!categoryExists) {
-        throw new BadRequestException("Categoria informada não existe.");
+        throw new BadRequestException("Categoria informada nao existe.");
       }
+    }
+
+    const hasConflict = await this.eventsCommandRepository.hasTimeConflict(
+      normalizedEmail,
+      dto.startDate,
+      dto.endDate,
+    );
+
+    if (hasConflict) {
+      throw new BadRequestException(
+        "Horario em conflito para este organizador.",
+      );
     }
 
     return this.eventsCommandRepository.create({
@@ -55,7 +68,7 @@ export class CreateEventUseCase {
       endDate: dto.endDate,
       location: dto.location.trim(),
       organizerName: dto.organizerName.trim(),
-      organizerEmail: dto.organizerEmail.trim().toLowerCase(),
+      organizerEmail: normalizedEmail,
       statusId: dto.statusId,
       status: normalizedStatus,
       categoryId: dto.categoryId,
@@ -65,7 +78,7 @@ export class CreateEventUseCase {
   private validateDates(startDate: Date, endDate: Date) {
     if (endDate.getTime() <= startDate.getTime()) {
       throw new BadRequestException(
-        "A data de término deve ser maior que a data de início.",
+        "A data de termino deve ser maior que a data de inicio.",
       );
     }
   }
