@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from "@nestjs/common";
 import { CreateEventDto } from "../dtos/create-event.dto";
 import {
   EVENTS_COMMAND_REPOSITORY,
@@ -49,13 +54,26 @@ export class CreateEventUseCase {
       }
     }
 
+    const normalizedOrganizerEmail = dto.organizerEmail.trim().toLowerCase();
+    const hasConflict = await this.eventsCommandRepository.hasOverlappingEvent({
+      organizerEmail: normalizedOrganizerEmail,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+    });
+
+    if (hasConflict) {
+      throw new ConflictException(
+        "Horário já está ocupado para este organizador. Ajuste as datas/horários ou o e-mail do organizador.",
+      );
+    }
+
     return this.eventsCommandRepository.create({
       title: dto.title.trim(),
       startDate: dto.startDate,
       endDate: dto.endDate,
       location: dto.location.trim(),
       organizerName: dto.organizerName.trim(),
-      organizerEmail: dto.organizerEmail.trim().toLowerCase(),
+      organizerEmail: normalizedOrganizerEmail,
       statusId: dto.statusId,
       status: normalizedStatus,
       categoryId: dto.categoryId,

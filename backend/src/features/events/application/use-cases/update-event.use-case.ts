@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -28,6 +29,22 @@ export class UpdateEventUseCase {
     const nextStartDate = dto.startDate ?? currentEvent.startDate;
     const nextEndDate = dto.endDate ?? currentEvent.endDate;
     this.validateDates(nextStartDate, nextEndDate);
+
+    const nextOrganizerEmail =
+      dto.organizerEmail?.trim().toLowerCase() ?? currentEvent.organizer.email;
+
+    const hasConflict = await this.eventsCommandRepository.hasOverlappingEvent({
+      organizerEmail: nextOrganizerEmail,
+      startDate: nextStartDate,
+      endDate: nextEndDate,
+      excludeEventId: eventId,
+    });
+
+    if (hasConflict) {
+      throw new ConflictException(
+        "Horário já está ocupado para este organizador. Ajuste as datas/horários ou o e-mail do organizador.",
+      );
+    }
 
     const nextStatusId = dto.statusId ?? currentEvent.statusId;
     const nextStatus = (dto.status ?? currentEvent.status)
@@ -69,9 +86,7 @@ export class UpdateEventUseCase {
       endDate: nextEndDate,
       location: dto.location?.trim() ?? currentEvent.location,
       organizerName: dto.organizerName?.trim() ?? currentEvent.organizer.name,
-      organizerEmail:
-        dto.organizerEmail?.trim().toLowerCase() ??
-        currentEvent.organizer.email,
+      organizerEmail: nextOrganizerEmail,
       statusId: nextStatusId,
       status: nextStatus,
       categoryId: nextCategoryId,

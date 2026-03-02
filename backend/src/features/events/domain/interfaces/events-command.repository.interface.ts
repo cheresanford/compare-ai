@@ -37,6 +37,12 @@ export interface EventsCommandRepository {
   ): Promise<EventCommandResult>;
   delete(eventId: number): Promise<void>;
   findById(eventId: number): Promise<EventCommandResult | null>;
+  hasOverlappingEvent(params: {
+    organizerEmail: string;
+    startDate: Date;
+    endDate: Date;
+    excludeEventId?: number;
+  }): Promise<boolean>;
   categoryExists(categoryId: number): Promise<boolean>;
   statusExists(status: string): Promise<boolean>;
   statusExistsById(statusId: number): Promise<boolean>;

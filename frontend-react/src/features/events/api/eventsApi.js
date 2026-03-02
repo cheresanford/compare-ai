@@ -1,5 +1,32 @@
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+class ApiError extends Error {
+  constructor(message, status, payload) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.payload = payload;
+  }
+}
+
+function extractErrorMessage(payload, status) {
+  const message = payload?.message;
+
+  if (typeof message === "string" && message.trim()) {
+    return message;
+  }
+
+  if (Array.isArray(message) && message.length) {
+    return message.filter(Boolean).join("\n");
+  }
+
+  if (payload?.error && typeof payload.error === "string") {
+    return payload.error;
+  }
+
+  return `Erro ${status}`;
+}
+
 async function request(path, options) {
   const response = await fetch(`${apiUrl}${path}`, {
     headers: {
@@ -13,7 +40,11 @@ async function request(path, options) {
   const payload = json?.data ?? json;
 
   if (!response.ok) {
-    throw new Error(payload?.message || `Erro ${response.status}`);
+    throw new ApiError(
+      extractErrorMessage(payload, response.status),
+      response.status,
+      payload,
+    );
   }
 
   return payload;

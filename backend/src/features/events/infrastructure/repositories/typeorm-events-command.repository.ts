@@ -115,6 +115,29 @@ export class TypeormEventsCommandRepository implements EventsCommandRepository {
     return this.mapEvent(event);
   }
 
+  async hasOverlappingEvent(params: {
+    organizerEmail: string;
+    startDate: Date;
+    endDate: Date;
+    excludeEventId?: number;
+  }): Promise<boolean> {
+    const query = this.eventRepository
+      .createQueryBuilder("event")
+      .innerJoin("event.user", "user")
+      .where("user.email = :email", { email: params.organizerEmail })
+      .andWhere("event.startDate < :endDate", { endDate: params.endDate })
+      .andWhere("event.endDate > :startDate", { startDate: params.startDate });
+
+    if (params.excludeEventId) {
+      query.andWhere("event.id <> :excludeEventId", {
+        excludeEventId: params.excludeEventId,
+      });
+    }
+
+    const count = await query.getCount();
+    return count > 0;
+  }
+
   async categoryExists(categoryId: number): Promise<boolean> {
     const count = await this.categoryRepository.count({
       where: { id: categoryId },
