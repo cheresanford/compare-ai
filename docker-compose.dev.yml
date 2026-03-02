@@ -14,6 +14,19 @@ services:
       - db_data_dev:/var/lib/mysql
     profiles: ["dev"]
 
+  db-admin:
+    image: phpmyadmin:5-apache
+    container_name: tcc_db_phpmyadmin_dev
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8085:80"
+    profiles: ["dev"]
+
   api-dev:
     image: node:18-alpine
     container_name: tcc_api_dev
