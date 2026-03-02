@@ -27,6 +27,7 @@ import { listCategories } from "../../categories/api/categoriesApi";
 import { deleteEvent, listEvents } from "../api/eventsApi";
 import { EventDetailsDialog } from "../components/EventDetailsDialog";
 import { EventFormDialog } from "../components/EventFormDialog";
+import { EventSummaryReportDialog } from "../components/EventSummaryReportDialog";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -55,6 +56,7 @@ export function EventsPage() {
     eventId: null,
   });
   const [detailsEventId, setDetailsEventId] = useState(null);
+  const [reportOpen, setReportOpen] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
 
   const totalPages = useMemo(
@@ -171,6 +173,14 @@ export function EventsPage() {
             sx={{ mr: 1 }}
           >
             Categorias
+          </Button>
+          <Button
+            variant="outlined"
+            color="inherit"
+            sx={{ mr: 1 }}
+            onClick={() => setReportOpen(true)}
+          >
+            Relatório
           </Button>
           <Button
             variant="contained"
@@ -361,6 +371,11 @@ export function EventsPage() {
           </CardContent>
         </Card>
       </Container>
+
+      <EventSummaryReportDialog
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+      />
 
       <EventFormDialog
         open={formState.open}

@@ -15,7 +15,9 @@ import { ListEventsQueryDto } from "./application/dtos/list-events-query.dto";
 import { UpdateEventDto } from "./application/dtos/update-event.dto";
 import { CreateEventUseCase } from "./application/use-cases/create-event.use-case";
 import { DeleteEventUseCase } from "./application/use-cases/delete-event.use-case";
+import { EventsSummaryReportQueryDto } from "./application/dtos/events-summary-report-query.dto";
 import { GetEventDetailsUseCase } from "./application/use-cases/get-event-details.use-case";
+import { GetEventsSummaryReportUseCase } from "./application/use-cases/get-events-summary-report.use-case";
 import { ListEventCategoriesUseCase } from "./application/use-cases/list-event-categories.use-case";
 import { ListEventStatusesUseCase } from "./application/use-cases/list-event-statuses.use-case";
 import { ListEventsUseCase } from "./application/use-cases/list-events.use-case";
@@ -31,6 +33,7 @@ export class EventsController {
     private readonly deleteEventUseCase: DeleteEventUseCase,
     private readonly listEventCategoriesUseCase: ListEventCategoriesUseCase,
     private readonly listEventStatusesUseCase: ListEventStatusesUseCase,
+    private readonly getEventsSummaryReportUseCase: GetEventsSummaryReportUseCase,
   ) {}
 
   @Get("options/categories")
@@ -46,6 +49,11 @@ export class EventsController {
   @Get()
   async list(@Query() query: ListEventsQueryDto) {
     return this.listEventsUseCase.execute(query);
+  }
+
+  @Get("reports/summary")
+  async summaryReport(@Query() query: EventsSummaryReportQueryDto) {
+    return this.getEventsSummaryReportUseCase.execute(query);
   }
 
   @Post()

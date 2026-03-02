@@ -129,3 +129,32 @@ export async function deleteEvent(eventId) {
     method: "DELETE",
   });
 }
+
+function dateOnlyToUtcIso(dateOnly, endOfDay = false) {
+  if (!dateOnly) return null;
+  const parts = String(dateOnly)
+    .split("-")
+    .map((item) => Number(item));
+  if (parts.length !== 3) return null;
+  const [year, month, day] = parts;
+  if (!year || !month || !day) return null;
+
+  const date = endOfDay
+    ? new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999))
+    : new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString();
+}
+
+export async function getEventsSummaryReport(params) {
+  const startDate = dateOnlyToUtcIso(params.startDate, false);
+  const endDate = dateOnlyToUtcIso(params.endDate, true);
+
+  const query = new URLSearchParams({
+    startDate: startDate ?? "",
+    endDate: endDate ?? "",
+  });
+
+  return request(`/events/reports/summary?${query.toString()}`);
+}
