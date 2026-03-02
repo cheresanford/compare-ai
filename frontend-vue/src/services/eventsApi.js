@@ -15,6 +15,10 @@ export const eventsApi = {
     apiClient.get(
       `/events${toQueryString({ page, size, q, sortBy, sortDir, categoryId })}`,
     ),
+  reportSummary: ({ startDate, endDate }) =>
+    apiClient.get(
+      `/events/report/summary${toQueryString({ startDate, endDate })}`,
+    ),
   get: (id) => apiClient.get(`/events/${id}`),
   create: (dto) => apiClient.post("/events", dto),
   update: (id, dto) => apiClient.patch(`/events/${id}`, dto),

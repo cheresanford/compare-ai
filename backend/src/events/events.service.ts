@@ -9,6 +9,7 @@ import { Repository } from "typeorm";
 import { CategoryEntity } from "../categories/category.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
 import { ListEventsQueryDto } from "./dto/list-events.query.dto";
+import { ReportEventsQueryDto } from "./dto/report-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventEntity } from "./event.entity";
 import { EventStatus } from "./event-status.enum";
@@ -18,6 +19,27 @@ export type PaginatedResult<T> = {
   total: number;
   page: number;
   size: number;
+};
+
+type EventSummaryByStatus = {
+  status: EventStatus;
+  total: number;
+};
+
+type EventSummaryByCategory = {
+  categoryId: number | null;
+  categoryName: string;
+  total: number;
+};
+
+export type EventsSummaryReport = {
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  totalEvents: number;
+  byStatus: EventSummaryByStatus[];
+  byCategory: EventSummaryByCategory[];
 };
 
 @Injectable()
@@ -70,6 +92,79 @@ export class EventsService {
       throw new NotFoundException("Event not found");
     }
     return event;
+  }
+
+  async reportSummary(
+    query: ReportEventsQueryDto,
+  ): Promise<EventsSummaryReport> {
+    const startDate = new Date(query.startDate);
+    const endDate = new Date(query.endDate);
+
+    this.assertReportDateRange(startDate, endDate);
+
+    const periodStart = new Date(startDate);
+    periodStart.setHours(0, 0, 0, 0);
+
+    const periodEnd = new Date(endDate);
+    periodEnd.setHours(23, 59, 59, 999);
+
+    const events = await this.eventsRepository
+      .createQueryBuilder("event")
+      .leftJoinAndSelect("event.category", "category")
+      .where("event.startDate <= :periodEnd", { periodEnd })
+      .andWhere("event.endDate >= :periodStart", { periodStart })
+      .getMany();
+
+    const byStatusMap = new Map<EventStatus, number>([
+      [EventStatus.Scheduled, 0],
+      [EventStatus.Canceled, 0],
+    ]);
+
+    const byCategoryMap = new Map<string, EventSummaryByCategory>();
+
+    for (const event of events) {
+      byStatusMap.set(event.status, (byStatusMap.get(event.status) ?? 0) + 1);
+
+      const categoryId = event.category?.id ?? null;
+      const categoryName = event.category?.name ?? "Sem categoria";
+      const categoryKey = String(categoryId ?? "null");
+
+      const existing = byCategoryMap.get(categoryKey);
+      if (!existing) {
+        byCategoryMap.set(categoryKey, {
+          categoryId,
+          categoryName,
+          total: 1,
+        });
+      } else {
+        existing.total += 1;
+      }
+    }
+
+    const byStatus: EventSummaryByStatus[] = [
+      {
+        status: EventStatus.Scheduled,
+        total: byStatusMap.get(EventStatus.Scheduled) ?? 0,
+      },
+      {
+        status: EventStatus.Canceled,
+        total: byStatusMap.get(EventStatus.Canceled) ?? 0,
+      },
+    ];
+
+    const byCategory = Array.from(byCategoryMap.values()).sort((a, b) =>
+      a.categoryName.localeCompare(b.categoryName),
+    );
+
+    return {
+      period: {
+        startDate: periodStart.toISOString(),
+        endDate: periodEnd.toISOString(),
+      },
+      totalEvents: events.length,
+      byStatus,
+      byCategory,
+    };
   }
 
   async create(dto: CreateEventDto): Promise<EventEntity> {
@@ -144,6 +239,21 @@ export class EventsService {
     if (endDate.getTime() <= startDate.getTime()) {
       throw new BadRequestException(
         "endDate must be strictly greater than startDate",
+      );
+    }
+  }
+
+  private assertReportDateRange(startDate: Date, endDate: Date) {
+    if (!(startDate instanceof Date) || Number.isNaN(startDate.getTime())) {
+      throw new BadRequestException("startDate must be a valid date");
+    }
+    if (!(endDate instanceof Date) || Number.isNaN(endDate.getTime())) {
+      throw new BadRequestException("endDate must be a valid date");
+    }
+
+    if (endDate.getTime() < startDate.getTime()) {
+      throw new BadRequestException(
+        "endDate must be greater than or equal to startDate",
       );
     }
   }
