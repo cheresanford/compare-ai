@@ -1,6 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import {
+  Between,
+  LessThan,
+  LessThanOrEqual,
+  MoreThan,
+  MoreThanOrEqual,
+  Repository,
+} from "typeorm";
 import { Category } from "../../../../tables/categories/entities/category.entity";
 import { EventStatus } from "../../../../tables/event-statuses/entities/event-status.entity";
 import { Event } from "../../../../tables/events/entities/event.entity";
@@ -10,6 +17,8 @@ import {
   EventsCommandRepository,
   SaveEventPayload,
 } from "../../domain/interfaces/events-command.repository.interface";
+import { CreateEventDto } from "../../application/dtos/create-event.dto";
+import { UpdateEventDto } from "../../application/dtos/update-event.dto";
 
 @Injectable()
 export class TypeormEventsCommandRepository implements EventsCommandRepository {
@@ -120,6 +129,47 @@ export class TypeormEventsCommandRepository implements EventsCommandRepository {
       where: { id: categoryId },
     });
     return count > 0;
+  }
+
+  async areEventsOverlapping(
+    newEventDto: CreateEventDto | UpdateEventDto,
+  ): Promise<boolean> {
+    const emailDoUsuario = newEventDto.organizerEmail;
+    let userAchado = null;
+    try {
+      const user = await this.userRepository.findOne({
+        where: {
+          email: emailDoUsuario,
+        },
+      });
+
+      if (!user) {
+        return false;
+      } else {
+        userAchado = user;
+      }
+    } catch (error) {
+      return false;
+    }
+
+    console.log("user achado:", userAchado);
+
+    if (emailDoUsuario) {
+      console.log("start date : ", newEventDto.startDate);
+      console.log("end date: ", newEventDto.endDate);
+      const qtdRepetidos = await this.eventRepository.count({
+        where: {
+          userId: userAchado.id,
+          startDate: MoreThanOrEqual(new Date(newEventDto.startDate)),
+          endDate: LessThanOrEqual(new Date(newEventDto.endDate)),
+        },
+      });
+
+      console.log("qtdRepetidos", qtdRepetidos);
+      console.log("qtdRepetidos > 0", qtdRepetidos > 0);
+
+      return qtdRepetidos > 0;
+    }
   }
 
   async statusExists(status: string): Promise<boolean> {

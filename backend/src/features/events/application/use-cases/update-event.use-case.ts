@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -48,6 +49,14 @@ export class UpdateEventUseCase {
       if (!statusExists) {
         throw new BadRequestException("Status de evento inválido.");
       }
+    }
+
+    const hasOverlappingTime =
+      await this.eventsCommandRepository.areEventsOverlapping(dto);
+    if (hasOverlappingTime) {
+      throw new ConflictException(
+        "Não é possível editar para uma data que já há eventos!",
+      );
     }
 
     const nextCategoryId =

@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  Inject,
+  Injectable,
+} from "@nestjs/common";
 import { CreateEventDto } from "../dtos/create-event.dto";
 import {
   EVENTS_COMMAND_REPOSITORY,
@@ -47,6 +52,15 @@ export class CreateEventUseCase {
       if (!categoryExists) {
         throw new BadRequestException("Categoria informada não existe.");
       }
+    }
+
+    const hasOverlappingTime =
+      await this.eventsCommandRepository.areEventsOverlapping(dto);
+
+    if (hasOverlappingTime) {
+      throw new ConflictException(
+        "Já existe evento cadastrado para esse usuário nessa data!",
+      );
     }
 
     return this.eventsCommandRepository.create({

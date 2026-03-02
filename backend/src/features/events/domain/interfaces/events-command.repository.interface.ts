@@ -1,3 +1,6 @@
+import { CreateEventDto } from "../../application/dtos/create-event.dto";
+import { UpdateEventDto } from "../../application/dtos/update-event.dto";
+
 export interface SaveEventPayload {
   title: string;
   startDate: Date;
@@ -38,6 +41,9 @@ export interface EventsCommandRepository {
   delete(eventId: number): Promise<void>;
   findById(eventId: number): Promise<EventCommandResult | null>;
   categoryExists(categoryId: number): Promise<boolean>;
+  areEventsOverlapping(
+    newEvent: CreateEventDto | UpdateEventDto,
+  ): Promise<boolean>;
   statusExists(status: string): Promise<boolean>;
   statusExistsById(statusId: number): Promise<boolean>;
 }
