@@ -27,6 +27,7 @@ import { listCategories } from "../../categories/api/categoriesApi";
 import { deleteEvent, listEvents } from "../api/eventsApi";
 import { EventDetailsDialog } from "../components/EventDetailsDialog";
 import { EventFormDialog } from "../components/EventFormDialog";
+import { RelatorioFormDialog } from "../components/RelatorioFormDialog";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -41,6 +42,7 @@ export function EventsPage() {
   const [page, setPage] = useState(0);
   const [size, setSize] = useState(10);
   const [searchInput, setSearchInput] = useState("");
+  const [openRelatorio, setOpenRelatorio] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState([]);
@@ -50,6 +52,12 @@ export function EventsPage() {
   const [error, setError] = useState("");
 
   const [formState, setFormState] = useState({
+    open: false,
+    mode: "create",
+    eventId: null,
+  });
+
+  const [formRelatorioState, setformRelatorioState] = useState({
     open: false,
     mode: "create",
     eventId: null,
@@ -131,12 +139,20 @@ export function EventsPage() {
     setFormState({ open: true, mode: "create", eventId: null });
   }
 
+  function handleOpenRelatorio() {
+    setformRelatorioState({ open: true, mode: "create", eventId: null });
+  }
+
   function handleOpenEdit(eventId) {
     setFormState({ open: true, mode: "edit", eventId });
   }
 
   function handleCloseForm() {
     setFormState((current) => ({ ...current, open: false }));
+  }
+
+  function handleCloseRelatorioForm() {
+    setformRelatorioState((current) => ({ ...current, open: false }));
   }
 
   function handleSaved() {
@@ -178,6 +194,13 @@ export function EventsPage() {
             onClick={handleOpenCreate}
           >
             Novo Evento
+          </Button>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={handleOpenRelatorio}
+          >
+            Relatório
           </Button>
         </Toolbar>
       </AppBar>
@@ -368,6 +391,12 @@ export function EventsPage() {
         eventId={formState.eventId}
         onClose={handleCloseForm}
         onSaved={handleSaved}
+      />
+
+      <RelatorioFormDialog
+        open={formRelatorioState.open}
+        mode={formRelatorioState.mode}
+        onClose={handleCloseRelatorioForm}
       />
 
       <EventDetailsDialog

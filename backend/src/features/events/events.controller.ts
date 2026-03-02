@@ -16,10 +16,12 @@ import { UpdateEventDto } from "./application/dtos/update-event.dto";
 import { CreateEventUseCase } from "./application/use-cases/create-event.use-case";
 import { DeleteEventUseCase } from "./application/use-cases/delete-event.use-case";
 import { GetEventDetailsUseCase } from "./application/use-cases/get-event-details.use-case";
+import { ListEventsRelatoriosUseCase } from "./application/use-cases/list-events.relatorios.use-case";
 import { ListEventCategoriesUseCase } from "./application/use-cases/list-event-categories.use-case";
 import { ListEventStatusesUseCase } from "./application/use-cases/list-event-statuses.use-case";
 import { ListEventsUseCase } from "./application/use-cases/list-events.use-case";
 import { UpdateEventUseCase } from "./application/use-cases/update-event.use-case";
+import { EventsRelatorioQueryDto } from "./application/dtos/events-relatorio-query.dto";
 
 @Controller("events")
 export class EventsController {
@@ -31,6 +33,7 @@ export class EventsController {
     private readonly deleteEventUseCase: DeleteEventUseCase,
     private readonly listEventCategoriesUseCase: ListEventCategoriesUseCase,
     private readonly listEventStatusesUseCase: ListEventStatusesUseCase,
+    private readonly ListEventsRelatoriosUseCase: ListEventsRelatoriosUseCase,
   ) {}
 
   @Get("options/categories")
@@ -46,6 +49,11 @@ export class EventsController {
   @Get()
   async list(@Query() query: ListEventsQueryDto) {
     return this.listEventsUseCase.execute(query);
+  }
+
+  @Get("relatorio")
+  async listRelatorio(@Query() query: EventsRelatorioQueryDto) {
+    return this.ListEventsRelatoriosUseCase.execute(query);
   }
 
   @Post()

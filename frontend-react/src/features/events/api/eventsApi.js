@@ -76,6 +76,23 @@ export async function listEvents(params) {
   return request(`/events?${query.toString()}`);
 }
 
+export async function listRelatorio(params) {
+  const query = new URLSearchParams({
+    startDate: Date(params.startDate),
+    endDate: Date(params.endDate),
+  });
+
+  if (params.startDate?.trim()) {
+    query.set("startDate", params.startDate?.trim());
+  }
+
+  if (params.endDate) {
+    query.set("endDate", params.endDate?.trim());
+  }
+
+  return request(`/events/relatorio?${query.toString()}`);
+}
+
 export async function listCategoryOptions() {
   return request("/events/options/categories");
 }
