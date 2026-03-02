@@ -10,6 +10,7 @@ import {
   Query,
 } from "@nestjs/common";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { EventsReportQueryDto } from "./dto/events-report.query.dto";
 import { ListEventsQueryDto } from "./dto/list-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventsService } from "./events.service";
@@ -21,6 +22,11 @@ export class EventsController {
   @Get()
   list(@Query() query: ListEventsQueryDto) {
     return this.eventsService.list(query);
+  }
+
+  @Get("report")
+  reportSummary(@Query() query: EventsReportQueryDto) {
+    return this.eventsService.reportSummary(query);
   }
 
   @Get(":id")

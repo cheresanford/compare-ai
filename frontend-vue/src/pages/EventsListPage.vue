@@ -69,7 +69,36 @@
             style="min-width: 220px"
           />
 
+          <v-text-field
+            v-model="reportStartDate"
+            label="Período (de)"
+            type="date"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            style="min-width: 190px"
+          />
+
+          <v-text-field
+            v-model="reportEndDate"
+            label="Período (até)"
+            type="date"
+            variant="outlined"
+            density="comfortable"
+            hide-details
+            style="min-width: 190px"
+          />
+
           <v-spacer />
+
+          <v-btn
+            color="secondary"
+            variant="tonal"
+            @click="refreshReport"
+            :loading="reportLoading"
+          >
+            Consultar relatório
+          </v-btn>
 
           <v-btn variant="tonal" @click="refresh" :loading="loading">
             Atualizar
@@ -77,6 +106,84 @@
         </div>
 
         <v-divider class="my-4" />
+
+        <v-card variant="tonal" class="mb-4">
+          <v-card-text>
+            <div class="text-subtitle-1 font-weight-medium mb-1">
+              Relatório resumido de eventos
+            </div>
+            <div class="text-body-2 text-medium-emphasis mb-4">
+              Período selecionado: <strong>{{ reportPeriodLabel }}</strong>
+            </div>
+
+            <v-alert
+              v-if="reportError"
+              type="error"
+              variant="tonal"
+              density="comfortable"
+              class="mb-4"
+            >
+              {{ reportError }}
+            </v-alert>
+
+            <v-row>
+              <v-col cols="12" md="4">
+                <v-card elevation="1">
+                  <v-card-text>
+                    <div class="text-caption text-medium-emphasis">
+                      Total no período
+                    </div>
+                    <div class="text-h4 font-weight-bold">{{ report.total }}</div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+              <v-col cols="12" md="4">
+                <v-card elevation="1">
+                  <v-card-text>
+                    <div class="text-caption text-medium-emphasis">
+                      Agendados
+                    </div>
+                    <div class="text-h4 font-weight-bold">{{ scheduledTotal }}</div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+              <v-col cols="12" md="4">
+                <v-card elevation="1">
+                  <v-card-text>
+                    <div class="text-caption text-medium-emphasis">
+                      Cancelados
+                    </div>
+                    <div class="text-h4 font-weight-bold">{{ canceledTotal }}</div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <div class="text-subtitle-2 mt-2 mb-2">Totais por categoria</div>
+            <v-table density="comfortable">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th class="text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-if="!reportLoading && report.byCategory.length === 0">
+                  <td colspan="2" class="text-medium-emphasis">
+                    Nenhum evento no período selecionado.
+                  </td>
+                </tr>
+                <tr
+                  v-for="category in report.byCategory"
+                  :key="category.categoryId ?? category.categoryName"
+                >
+                  <td>{{ category.categoryName }}</td>
+                  <td class="text-right">{{ category.total }}</td>
+                </tr>
+              </tbody>
+            </v-table>
+          </v-card-text>
+        </v-card>
 
         <v-alert v-if="error" type="error" variant="tonal" class="mb-4">
           {{ error }}
@@ -200,6 +307,20 @@ const sortDir = ref("ASC");
 
 const categoryId = ref(null);
 const categories = ref([]);
+const reportLoading = ref(false);
+const reportError = ref("");
+
+const reportStartDate = ref(getTodayDateInput());
+const reportEndDate = ref(getTodayDateInput());
+const report = ref({
+  period: { startDate: null, endDate: null },
+  total: 0,
+  byStatus: [
+    { status: "scheduled", total: 0 },
+    { status: "canceled", total: 0 },
+  ],
+  byCategory: [],
+});
 
 const categoryItems = computed(() => [
   { title: "Todas", value: null },
@@ -218,6 +339,25 @@ const sortDirItems = [
 
 const pageCount = computed(() =>
   Math.max(1, Math.ceil(total.value / size.value)),
+);
+
+const reportPeriodLabel = computed(() => {
+  if (!reportStartDate.value || !reportEndDate.value) {
+    return "não definido";
+  }
+  return `${formatDateOnly(reportStartDate.value)} até ${formatDateOnly(reportEndDate.value)}`;
+});
+
+const scheduledTotal = computed(
+  () =>
+    report.value.byStatus.find((item) => item.status === "scheduled")?.total ??
+    0,
+);
+
+const canceledTotal = computed(
+  () =>
+    report.value.byStatus.find((item) => item.status === "canceled")?.total ??
+    0,
 );
 
 let qTimer = null;
@@ -266,6 +406,32 @@ async function refresh() {
   }
 }
 
+async function refreshReport() {
+  reportError.value = "";
+
+  if (!reportStartDate.value || !reportEndDate.value) {
+    reportError.value = "Informe data inicial e final para consultar o relatório.";
+    return;
+  }
+
+  if (reportStartDate.value > reportEndDate.value) {
+    reportError.value = "A data inicial deve ser menor ou igual à data final.";
+    return;
+  }
+
+  const bounds = dateRangeInputToIso(reportStartDate.value, reportEndDate.value);
+  reportLoading.value = true;
+
+  try {
+    const data = await eventsApi.report(bounds);
+    report.value = data;
+  } catch (e) {
+    reportError.value = e?.message || "Erro ao consultar relatório de eventos.";
+  } finally {
+    reportLoading.value = false;
+  }
+}
+
 const deleteDialog = ref(false);
 const deleting = ref(null);
 const deletingLoading = ref(false);
@@ -300,8 +466,30 @@ onMounted(() => {
     }
 
     refresh();
+    refreshReport();
   })();
 });
+
+function getTodayDateInput() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDateOnly(value) {
+  if (!value) return "-";
+  const [year, month, day] = value.split("-");
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
+}
+
+function dateRangeInputToIso(startDateInput, endDateInput) {
+  const start = new Date(`${startDateInput}T00:00:00`);
+  const end = new Date(`${endDateInput}T23:59:59.999`);
+  return { startDate: start.toISOString(), endDate: end.toISOString() };
+}
 </script>
 
 <style scoped>

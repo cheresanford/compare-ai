@@ -8,6 +8,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CategoryEntity } from "../categories/category.entity";
 import { CreateEventDto } from "./dto/create-event.dto";
+import { EventsReportQueryDto } from "./dto/events-report.query.dto";
 import { ListEventsQueryDto } from "./dto/list-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventEntity } from "./event.entity";
@@ -18,6 +19,20 @@ export type PaginatedResult<T> = {
   total: number;
   page: number;
   size: number;
+};
+
+export type EventsReportSummary = {
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  total: number;
+  byStatus: Array<{ status: EventStatus; total: number }>;
+  byCategory: Array<{
+    categoryId: number | null;
+    categoryName: string;
+    total: number;
+  }>;
 };
 
 @Injectable()
@@ -59,6 +74,96 @@ export class EventsService {
     const [items, total] = await qb.getManyAndCount();
 
     return { items, total, page, size };
+  }
+
+  async reportSummary(
+    query: EventsReportQueryDto,
+  ): Promise<EventsReportSummary> {
+    const startDate = new Date(query.startDate);
+    const endDate = new Date(query.endDate);
+
+    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+      throw new BadRequestException("startDate and endDate must be valid dates");
+    }
+
+    if (endDate.getTime() < startDate.getTime()) {
+      throw new BadRequestException("endDate must be equal to or after startDate");
+    }
+
+    const overlapWhere = [
+      "event.startDate <= :periodEnd",
+      "event.endDate >= :periodStart",
+    ];
+    const overlapParams = {
+      periodStart: startDate,
+      periodEnd: endDate,
+    };
+
+    const total = await this.eventsRepository
+      .createQueryBuilder("event")
+      .where(overlapWhere.join(" AND "), overlapParams)
+      .getCount();
+
+    const rawByStatus = await this.eventsRepository
+      .createQueryBuilder("event")
+      .select("event.status", "status")
+      .addSelect("COUNT(*)", "total")
+      .where(overlapWhere.join(" AND "), overlapParams)
+      .groupBy("event.status")
+      .getRawMany<{ status: EventStatus; total: string }>();
+
+    const statusTotals = new Map<EventStatus, number>([
+      [EventStatus.Scheduled, 0],
+      [EventStatus.Canceled, 0],
+    ]);
+
+    rawByStatus.forEach((item) => {
+      if (
+        item.status === EventStatus.Scheduled ||
+        item.status === EventStatus.Canceled
+      ) {
+        statusTotals.set(item.status, Number(item.total));
+      }
+    });
+
+    const rawByCategory = await this.eventsRepository
+      .createQueryBuilder("event")
+      .leftJoin("event.category", "category")
+      .select("event.categoryId", "categoryId")
+      .addSelect("COALESCE(category.name, 'Sem categoria')", "categoryName")
+      .addSelect("COUNT(*)", "total")
+      .where(overlapWhere.join(" AND "), overlapParams)
+      .groupBy("event.categoryId")
+      .addGroupBy("category.name")
+      .orderBy("total", "DESC")
+      .addOrderBy("categoryName", "ASC")
+      .getRawMany<{ categoryId: number | null; categoryName: string; total: string }>();
+
+    return {
+      period: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      },
+      total,
+      byStatus: [
+        {
+          status: EventStatus.Scheduled,
+          total: statusTotals.get(EventStatus.Scheduled) ?? 0,
+        },
+        {
+          status: EventStatus.Canceled,
+          total: statusTotals.get(EventStatus.Canceled) ?? 0,
+        },
+      ],
+      byCategory: rawByCategory.map((item) => ({
+        categoryId:
+          item.categoryId === null || item.categoryId === undefined
+            ? null
+            : Number(item.categoryId),
+        categoryName: item.categoryName,
+        total: Number(item.total),
+      })),
+    };
   }
 
   async findOne(id: number): Promise<EventEntity> {
