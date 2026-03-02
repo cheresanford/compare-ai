@@ -6,6 +6,7 @@
       <v-btn variant="text" to="/">Início</v-btn>
       <v-btn variant="text" to="/eventos">Eventos</v-btn>
       <v-btn variant="text" to="/categorias">Categorias</v-btn>
+      <v-btn variant="text" to="/relatorios">Relatórios</v-btn>
       <v-btn variant="text" to="/sobre">Sobre</v-btn>
     </v-app-bar>
     <v-main>

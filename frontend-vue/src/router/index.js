@@ -5,6 +5,7 @@ import EventsListPage from "../pages/EventsListPage.vue";
 import EventFormPage from "../pages/EventFormPage.vue";
 import EventDetailPage from "../pages/EventDetailPage.vue";
 import CategoriesPage from "../pages/CategoriesPage.vue";
+import EventRelatorioPage from "../pages/EventRelatorioPage.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -18,6 +19,11 @@ const router = createRouter({
       path: "/eventos",
       name: "events-list",
       component: EventsListPage,
+    },
+    {
+      path: "/relatorios",
+      name: "relatorios-list",
+      component: EventRelatorioPage,
     },
     {
       path: "/eventos/novo",

@@ -11,6 +11,7 @@ import { ListEventsQueryDto } from "./dto/list-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventEntity } from "./event.entity";
 import { EventStatus } from "./event-status.enum";
+import { EventResult } from "./dto/event-relatorio.dto";
 
 export type PaginatedResult<T> = {
   items: T[];
@@ -191,5 +192,20 @@ export class EventsService {
     const conflictCount = await qbOrganizerConflict.getCount();
 
     return conflictCount;
+  }
+
+  async relatorio(startDate: Date, endDate: Date): Promise<EventResult> {
+    this.assertDateRange(startDate, endDate);
+
+    const eventsByDate = this.eventsRepository
+      .createQueryBuilder("event")
+      .where("event.startDate <= :endDate", { endDate })
+      .andWhere("event.endDate >= :startDate", { startDate });
+
+    const totalEvents = await eventsByDate.getCount();
+
+    return {
+      totalEvents,
+    };
   }
 }

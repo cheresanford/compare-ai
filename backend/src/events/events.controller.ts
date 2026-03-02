@@ -13,6 +13,7 @@ import { CreateEventDto } from "./dto/create-event.dto";
 import { ListEventsQueryDto } from "./dto/list-events.query.dto";
 import { UpdateEventDto } from "./dto/update-event.dto";
 import { EventsService } from "./events.service";
+import { EventRelatorioDto } from "./dto/event-relatorio.dto";
 
 @Controller("events")
 export class EventsController {
@@ -21,6 +22,11 @@ export class EventsController {
   @Get()
   list(@Query() query: ListEventsQueryDto) {
     return this.eventsService.list(query);
+  }
+
+  @Get("relatorios")
+  relatorio(@Param() query: EventRelatorioDto) {
+    return this.eventsService.relatorio(query.startDate, query.endDate);
   }
 
   @Get(":id")

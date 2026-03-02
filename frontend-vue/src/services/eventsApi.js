@@ -16,6 +16,8 @@ export const eventsApi = {
       `/events${toQueryString({ page, size, q, sortBy, sortDir, categoryId })}`,
     ),
   get: (id) => apiClient.get(`/events/${id}`),
+  relatorios: ({ startDate, endDate }) =>
+    apiClient.get(`/events/relatorios${toQueryString({ startDate, endDate })}`),
   create: (dto) => apiClient.post("/events", dto),
   update: (id, dto) => apiClient.patch(`/events/${id}`, dto),
   remove: (id) => apiClient.delete(`/events/${id}`),
