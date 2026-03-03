@@ -143,8 +143,17 @@ export function CategoriesPage() {
             to="/events"
             variant="outlined"
             color="inherit"
+            sx={{ mr: 1 }}
           >
             Ir para Eventos
+          </Button>
+          <Button
+            component={RouterLink}
+            to="/reports"
+            variant="outlined"
+            color="inherit"
+          >
+            Relatorio
           </Button>
         </Toolbar>
       </AppBar>
