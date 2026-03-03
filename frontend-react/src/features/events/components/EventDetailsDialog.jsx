@@ -3,7 +3,6 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
@@ -12,7 +11,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { deleteEvent, getEventDetails } from "../api/eventsApi";
+import { deleteEvent, getEventDetails, syncEventToGoogle } from "../api/eventsApi";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -21,42 +20,27 @@ function formatDate(value) {
   return date.toLocaleString("pt-BR");
 }
 
-function DetailLine({ label, value }) {
-  return (
-    <Stack direction="row" spacing={1}>
-      <Typography variant="body2" color="text.secondary" sx={{ minWidth: 140 }}>
-        {label}
-      </Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Stack>
-  );
-}
-
-export function EventDetailsDialog({
-  open,
-  eventId,
-  onClose,
-  onEdit,
-  onDeleted,
-}) {
+export function EventDetailsDialog({ open, eventId, onClose, onEdit, onDeleted }) {
+  const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [eventData, setEventData] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
 
   useEffect(() => {
     if (!open || !eventId) return;
 
     let isActive = true;
-
     async function loadDetails() {
       setLoading(true);
       setError("");
+      setSyncMessage("");
 
       try {
-        const details = await getEventDetails(eventId);
+        const result = await getEventDetails(eventId);
         if (isActive) {
-          setEventData(details);
+          setDetails(result);
         }
       } catch (loadError) {
         if (isActive) {
@@ -77,13 +61,17 @@ export function EventDetailsDialog({
   }, [open, eventId]);
 
   async function handleDelete() {
+    if (!eventId) return;
+
     const confirmed = window.confirm("Deseja realmente excluir este evento?");
     if (!confirmed) return;
 
     setDeleting(true);
+    setError("");
+
     try {
       await deleteEvent(eventId);
-      onDeleted();
+      onDeleted?.();
     } catch (deleteError) {
       setError(deleteError.message || "Erro ao excluir evento.");
     } finally {
@@ -91,8 +79,31 @@ export function EventDetailsDialog({
     }
   }
 
+  async function handleSync() {
+    if (!eventId) return;
+
+    setSyncing(true);
+    setSyncMessage("");
+    setError("");
+
+    try {
+      const result = await syncEventToGoogle(eventId);
+      setSyncMessage("Evento sincronizado com sucesso.");
+      if (result?.googleEventId) {
+        setDetails((current) => ({
+          ...current,
+          googleEventId: result.googleEventId,
+        }));
+      }
+    } catch (syncError) {
+      setError(syncError.message || "Erro ao sincronizar evento.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Detalhes do evento</DialogTitle>
 
       <DialogContent dividers>
@@ -102,40 +113,67 @@ export function EventDetailsDialog({
           </Alert>
         ) : null}
 
-        {loading ? (
-          <Typography variant="body2">Carregando...</Typography>
-        ) : eventData ? (
-          <Stack spacing={1.2}>
-            <Typography variant="h6">{eventData.title}</Typography>
+        {syncMessage ? (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {syncMessage}
+          </Alert>
+        ) : null}
 
-            <Box>
-              <Chip
-                label={eventData.status?.name || "-"}
-                color="primary"
-                size="small"
-              />
-            </Box>
-
-            <Divider sx={{ my: 1 }} />
-
-            <DetailLine
-              label="Início"
-              value={formatDate(eventData.startDate)}
-            />
-            <DetailLine label="Término" value={formatDate(eventData.endDate)} />
-            <DetailLine
-              label="Criado em"
-              value={formatDate(eventData.createdAt)}
-            />
-            <DetailLine label="Local" value={eventData.location || "-"} />
-            <DetailLine
-              label="Organizador"
-              value={`${eventData.organizer?.name || "-"} (${eventData.organizer?.email || "-"})`}
-            />
-            <DetailLine
-              label="Categoria"
-              value={eventData.category?.name || "Sem categoria"}
-            />
+        {details ? (
+          <Stack spacing={2}>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Google Calendar
+              </Typography>
+              <Typography variant="body2">
+                {details.googleEventId ? "Sincronizado" : "Nao sincronizado"}
+              </Typography>
+            </Stack>
+            <Divider />
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Titulo
+              </Typography>
+              <Typography>{details.title}</Typography>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Inicio
+              </Typography>
+              <Typography>{formatDate(details.startDate)}</Typography>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Termino
+              </Typography>
+              <Typography>{formatDate(details.endDate)}</Typography>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Local
+              </Typography>
+              <Typography>{details.location || "-"}</Typography>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Status
+              </Typography>
+              <Typography>{details.status?.name || "-"}</Typography>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Categoria
+              </Typography>
+              <Typography>{details.category?.name || "Sem categoria"}</Typography>
+            </Stack>
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
+                Organizador
+              </Typography>
+              <Typography>
+                {details.organizer?.name || "-"} ({details.organizer?.email || "-"})
+              </Typography>
+            </Stack>
           </Stack>
         ) : null}
       </DialogContent>
@@ -143,7 +181,17 @@ export function EventDetailsDialog({
       <DialogActions>
         <Button onClick={onClose}>Fechar</Button>
         <Box sx={{ flexGrow: 1 }} />
-        <Button onClick={() => onEdit(eventId)} disabled={loading || deleting}>
+        <Button
+          variant="outlined"
+          onClick={handleSync}
+          disabled={loading || deleting || syncing}
+        >
+          {syncing ? "Sincronizando..." : "Sincronizar no Calendar"}
+        </Button>
+        <Button
+          onClick={() => onEdit?.(eventId)}
+          disabled={!details || deleting}
+        >
           Editar
         </Button>
         <Button

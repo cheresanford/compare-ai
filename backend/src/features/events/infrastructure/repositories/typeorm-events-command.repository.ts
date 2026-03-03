@@ -124,11 +124,16 @@ export class TypeormEventsCommandRepository implements EventsCommandRepository {
     const query = this.eventRepository
       .createQueryBuilder("event")
       .innerJoin("event.user", "user")
-      .where("user.email = :email", { email: params.organizerEmail })
+      .where("LOWER(user.email) = LOWER(:email)", {
+        email: params.organizerEmail,
+      })
       .andWhere("event.startDate < :endDate", { endDate: params.endDate })
       .andWhere("event.endDate > :startDate", { startDate: params.startDate });
 
-    if (params.excludeEventId) {
+    if (
+      params.excludeEventId !== undefined &&
+      params.excludeEventId !== null
+    ) {
       query.andWhere("event.id <> :excludeEventId", {
         excludeEventId: params.excludeEventId,
       });

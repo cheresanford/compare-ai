@@ -31,6 +31,7 @@ export class TypeormEventsDetailsRepository implements EventsDetailsRepository {
       endDate: event.endDate,
       location: event.location,
       createdAt: event.createdAt,
+      googleEventId: event.googleEventId ?? null,
       status: {
         id: event.status.id,
         name: event.status.name,

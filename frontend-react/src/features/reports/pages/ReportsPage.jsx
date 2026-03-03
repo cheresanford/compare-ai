@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import {
   Alert,
@@ -20,6 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import { getEventsSummary } from "../api/reportsApi";
+import { getGoogleStatus } from "../../google/api/googleApi";
 
 function toDateInput(date) {
   const pad = (value) => String(value).padStart(2, "0");
@@ -43,6 +44,7 @@ export function ReportsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState(null);
+  const [googleStatus, setGoogleStatus] = useState({ connected: false });
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -59,6 +61,29 @@ export function ReportsPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadGoogle() {
+      try {
+        const status = await getGoogleStatus();
+        if (isActive) {
+          setGoogleStatus(status || { connected: false });
+        }
+      } catch {
+        if (isActive) {
+          setGoogleStatus({ connected: false });
+        }
+      }
+    }
+
+    loadGoogle();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <Box>
@@ -130,6 +155,13 @@ export function ReportsPage() {
         {error ? (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
+          </Alert>
+        ) : null}
+
+        {googleStatus.connected ? (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            Conectado ao Google Calendar
+            {googleStatus.email ? `: ${googleStatus.email}` : ""}
           </Alert>
         ) : null}
 

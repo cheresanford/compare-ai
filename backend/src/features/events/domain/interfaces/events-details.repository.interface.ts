@@ -5,6 +5,7 @@ export interface EventDetailsResult {
   endDate: Date;
   location: string;
   createdAt: Date;
+  googleEventId?: string | null;
   status: {
     id: number;
     name: string;

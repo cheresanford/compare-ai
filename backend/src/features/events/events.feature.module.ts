@@ -23,9 +23,13 @@ import { Category } from "../../tables/categories/entities/category.entity";
 import { Event } from "../../tables/events/entities/event.entity";
 import { User } from "../../tables/users/entities/user.entity";
 import { EventStatus } from "../../tables/event-statuses/entities/event-status.entity";
+import { GoogleFeatureModule } from "../google/google.feature.module";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Event, User, EventStatus, Category])],
+  imports: [
+    TypeOrmModule.forFeature([Event, User, EventStatus, Category]),
+    GoogleFeatureModule,
+  ],
   controllers: [EventsController],
   providers: [
     ListEventsUseCase,

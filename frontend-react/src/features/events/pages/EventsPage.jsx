@@ -24,6 +24,7 @@ import {
   Typography,
 } from "@mui/material";
 import { listCategories } from "../../categories/api/categoriesApi";
+import { connectGoogle, disconnectGoogle, getGoogleStatus } from "../../google/api/googleApi";
 import { deleteEvent, listEvents } from "../api/eventsApi";
 import { EventDetailsDialog } from "../components/EventDetailsDialog";
 import { EventFormDialog } from "../components/EventFormDialog";
@@ -48,6 +49,8 @@ export function EventsPage() {
   const [sortDirection, setSortDirection] = useState("asc");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [googleStatus, setGoogleStatus] = useState({ connected: false });
+  const [googleNotice, setGoogleNotice] = useState("");
 
   const [formState, setFormState] = useState({
     open: false,
@@ -123,6 +126,42 @@ export function EventsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadGoogle() {
+      try {
+        const status = await getGoogleStatus();
+        if (isActive) {
+          setGoogleStatus(status || { connected: false });
+        }
+      } catch {
+        if (isActive) {
+          setGoogleStatus({ connected: false });
+        }
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const googleParam = params.get("google");
+    if (googleParam === "connected") {
+      setGoogleNotice("Conectado ao Google Calendar.");
+    } else if (googleParam === "error") {
+      setGoogleNotice("Falha ao conectar no Google.");
+    }
+
+    if (googleParam) {
+      params.delete("google");
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+
+    loadGoogle();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   function refreshList() {
     setReloadToken((current) => current + 1);
   }
@@ -161,8 +200,14 @@ export function EventsPage() {
       <AppBar position="static" elevation={1}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            TeamMeet Planner — Eventos
+            TeamMeet Planner - Eventos
           </Typography>
+          {googleStatus.connected ? (
+            <Typography variant="body2" sx={{ mr: 2 }}>
+              Google conectado
+              {googleStatus.email ? `: ${googleStatus.email}` : ""}
+            </Typography>
+          ) : null}
           <Button
             component={RouterLink}
             to="/categories"
@@ -181,6 +226,35 @@ export function EventsPage() {
           >
             Relatorio
           </Button>
+          {googleStatus.connected ? (
+            <Button
+              variant="outlined"
+              color="inherit"
+              sx={{ mr: 1 }}
+              onClick={async () => {
+                try {
+                  await disconnectGoogle();
+                  setGoogleStatus({ connected: false });
+                  setGoogleNotice("Desconectado do Google.");
+                } catch (logoutError) {
+                  setGoogleNotice(
+                    logoutError.message || "Falha ao desconectar do Google.",
+                  );
+                }
+              }}
+            >
+              Desconectar Google
+            </Button>
+          ) : (
+            <Button
+              variant="outlined"
+              color="inherit"
+              sx={{ mr: 1 }}
+              onClick={connectGoogle}
+            >
+              Conectar ao Google
+            </Button>
+          )}
           <Button
             variant="contained"
             color="secondary"
@@ -200,7 +274,7 @@ export function EventsPage() {
               sx={{ mb: 2 }}
             >
               <TextField
-                label="Buscar por título"
+                label="Buscar por titulo"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 size="small"
@@ -262,16 +336,16 @@ export function EventsPage() {
                     setPage(0);
                   }}
                 >
-                  <MenuItem value="startDate">Data de início</MenuItem>
-                  <MenuItem value="createdAt">Data de criação</MenuItem>
+                  <MenuItem value="startDate">Data de inicio</MenuItem>
+                  <MenuItem value="createdAt">Data de criacao</MenuItem>
                 </Select>
               </FormControl>
 
               <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="sort-direction-label">Direção</InputLabel>
+                <InputLabel id="sort-direction-label">Direcao</InputLabel>
                 <Select
                   labelId="sort-direction-label"
-                  label="Direção"
+                  label="Direcao"
                   value={sortDirection}
                   onChange={(event) => {
                     setSortDirection(event.target.value);
@@ -284,6 +358,19 @@ export function EventsPage() {
               </FormControl>
             </Stack>
 
+            {googleStatus.connected ? (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                Conectado ao Google Calendar
+                {googleStatus.email ? `: ${googleStatus.email}` : ""}
+              </Alert>
+            ) : null}
+
+            {googleNotice ? (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                {googleNotice}
+              </Alert>
+            ) : null}
+
             {error ? (
               <Alert severity="error" sx={{ mb: 2 }}>
                 {error}
@@ -293,13 +380,13 @@ export function EventsPage() {
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>Título</TableCell>
-                  <TableCell>Início</TableCell>
-                  <TableCell>Término</TableCell>
+                  <TableCell>Titulo</TableCell>
+                  <TableCell>Inicio</TableCell>
+                  <TableCell>Termino</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell>Categoria</TableCell>
                   <TableCell>Organizador</TableCell>
-                  <TableCell align="right">Ações</TableCell>
+                  <TableCell align="right">Acoes</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

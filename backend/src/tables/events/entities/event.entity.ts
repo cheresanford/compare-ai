@@ -60,4 +60,10 @@ export class Event {
   })
   @JoinColumn({ name: "category_id" })
   category?: Category | null;
+
+  @Column({ type: "varchar", length: 255, name: "google_event_id", nullable: true })
+  googleEventId?: string | null;
+
+  @Column({ type: "datetime", name: "google_synced_at", nullable: true })
+  googleSyncedAt?: Date | null;
 }

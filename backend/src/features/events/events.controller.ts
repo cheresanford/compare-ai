@@ -22,6 +22,7 @@ import { ListEventCategoriesUseCase } from "./application/use-cases/list-event-c
 import { ListEventStatusesUseCase } from "./application/use-cases/list-event-statuses.use-case";
 import { ListEventsUseCase } from "./application/use-cases/list-events.use-case";
 import { UpdateEventUseCase } from "./application/use-cases/update-event.use-case";
+import { GoogleIntegrationService } from "../google/google.service";
 
 @Controller("events")
 export class EventsController {
@@ -34,6 +35,7 @@ export class EventsController {
     private readonly listEventCategoriesUseCase: ListEventCategoriesUseCase,
     private readonly listEventStatusesUseCase: ListEventStatusesUseCase,
     private readonly getEventsSummaryUseCase: GetEventsSummaryUseCase,
+    private readonly googleIntegrationService: GoogleIntegrationService,
   ) {}
 
   @Get("options/categories")
@@ -72,6 +74,11 @@ export class EventsController {
     @Body() body: UpdateEventDto,
   ) {
     return this.updateEventUseCase.execute(id, body);
+  }
+
+  @Post(":id/sync/google")
+  async syncGoogle(@Param("id", ParseIntPipe) id: number) {
+    return this.googleIntegrationService.syncEvent(id);
   }
 
   @Delete(":id")

@@ -129,3 +129,9 @@ export async function deleteEvent(eventId) {
     method: "DELETE",
   });
 }
+
+export async function syncEventToGoogle(eventId) {
+  return request(`/events/${eventId}/sync/google`, {
+    method: "POST",
+  });
+}
