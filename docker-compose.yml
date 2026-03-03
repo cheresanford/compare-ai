@@ -16,6 +16,8 @@ services:
   api:
     build: ./backend
     container_name: tcc_api
+    env_file:
+      - ./backend/.env
     depends_on:
       - db
     environment:
@@ -24,6 +26,7 @@ services:
       DB_USER: tcc
       DB_PASS: tcc
       DB_NAME: tcc
+      DB_SYNC: true
     ports:
       - "3000:3000"
     profiles: ["vue", "react"]

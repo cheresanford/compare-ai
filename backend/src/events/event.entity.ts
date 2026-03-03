@@ -33,6 +33,9 @@ export class EventEntity {
   @Column({ type: "enum", enum: EventStatus, default: EventStatus.Scheduled })
   status: EventStatus;
 
+  @Column({ type: "varchar", length: 255, nullable: true })
+  googleCalendarEventId?: string | null;
+
   @Column({ type: "int", nullable: true })
   categoryId?: number | null;
 

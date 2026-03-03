@@ -12,6 +12,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         const port = Number.parseInt(portRaw, 10);
         const nodeEnv = (config.get<string>('NODE_ENV') ?? '').toLowerCase();
         const isDev = nodeEnv === 'development' || nodeEnv === 'dev';
+        const dbSyncRaw = (config.get<string>('DB_SYNC') ?? '').toLowerCase();
+        const dbSyncFromEnv =
+          dbSyncRaw === 'true' ? true : dbSyncRaw === 'false' ? false : null;
 
         return {
           type: 'mysql' as const,
@@ -23,7 +26,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           autoLoadEntities: true,
           // Em dev, facilita demonstração local sem migrations.
           // Em produção, mantenha migrations + synchronize=false.
-          synchronize: isDev,
+          synchronize: dbSyncFromEnv ?? isDev,
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
           retryAttempts: 10,
           retryDelay: 2000,

@@ -5,6 +5,7 @@ import { AppService } from "./app.service";
 import { DatabaseModule } from "./database/database.module";
 import { EventsModule } from "./events/events.module";
 import { CategoriesModule } from "./categories/categories.module";
+import { GoogleCalendarModule } from "./google-calendar/google-calendar.module";
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { CategoriesModule } from "./categories/categories.module";
     DatabaseModule,
     CategoriesModule,
     EventsModule,
+    GoogleCalendarModule,
   ],
   controllers: [AppController],
   providers: [AppService],
