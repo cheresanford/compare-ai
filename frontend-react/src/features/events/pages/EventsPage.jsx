@@ -173,6 +173,15 @@ export function EventsPage() {
             Categorias
           </Button>
           <Button
+            component={RouterLink}
+            to="/reports"
+            variant="outlined"
+            color="inherit"
+            sx={{ mr: 1 }}
+          >
+            Relatorio
+          </Button>
+          <Button
             variant="contained"
             color="secondary"
             onClick={handleOpenCreate}

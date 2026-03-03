@@ -11,11 +11,13 @@ import {
 } from "@nestjs/common";
 import { CreateEventDto } from "./application/dtos/create-event.dto";
 import { DeleteEventQueryDto } from "./application/dtos/delete-event-query.dto";
+import { EventsSummaryQueryDto } from "./application/dtos/events-summary-query.dto";
 import { ListEventsQueryDto } from "./application/dtos/list-events-query.dto";
 import { UpdateEventDto } from "./application/dtos/update-event.dto";
 import { CreateEventUseCase } from "./application/use-cases/create-event.use-case";
 import { DeleteEventUseCase } from "./application/use-cases/delete-event.use-case";
 import { GetEventDetailsUseCase } from "./application/use-cases/get-event-details.use-case";
+import { GetEventsSummaryUseCase } from "./application/use-cases/get-events-summary.use-case";
 import { ListEventCategoriesUseCase } from "./application/use-cases/list-event-categories.use-case";
 import { ListEventStatusesUseCase } from "./application/use-cases/list-event-statuses.use-case";
 import { ListEventsUseCase } from "./application/use-cases/list-events.use-case";
@@ -31,6 +33,7 @@ export class EventsController {
     private readonly deleteEventUseCase: DeleteEventUseCase,
     private readonly listEventCategoriesUseCase: ListEventCategoriesUseCase,
     private readonly listEventStatusesUseCase: ListEventStatusesUseCase,
+    private readonly getEventsSummaryUseCase: GetEventsSummaryUseCase,
   ) {}
 
   @Get("options/categories")
@@ -46,6 +49,11 @@ export class EventsController {
   @Get()
   async list(@Query() query: ListEventsQueryDto) {
     return this.listEventsUseCase.execute(query);
+  }
+
+  @Get("reports/summary")
+  async summary(@Query() query: EventsSummaryQueryDto) {
+    return this.getEventsSummaryUseCase.execute(query);
   }
 
   @Post()
