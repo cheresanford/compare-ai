@@ -3,3 +3,8 @@ backend/node_modules
 frontend-vue/node_modules
 frontend-react/node_modules
 backend/dist
+.env
+backend/.env
+frontend-vue/.env
+frontend-react/.env
+.env.*
